@@ -19,7 +19,7 @@ function OnGUI(){
 
 function GUIFunction(){
 	menuPos.y = menuSize.y;
-	newSize = Vector2(menuSize.x,Screen.height - (menuSize.y*2));
+	var newSize = Vector2(menuSize.x,Screen.height - (menuSize.y*2));
 	scrollPosition = GUI.BeginScrollView(Rect(menuPos.x,menuPos.y,newSize.x + scrollWidth,newSize.y),
 	scrollPosition,Rect(menuPos.x,menuPos.y,menuSize.x,buttonMargin+((buttonHeight+buttonMargin)*levelButtons.length)));
 	var buttonPos = Vector2(menuPos.x + buttonMargin,menuPos.y + buttonMargin);

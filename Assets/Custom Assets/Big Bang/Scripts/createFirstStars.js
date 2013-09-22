@@ -21,6 +21,13 @@ var newStartLife : float = 400;
 var newSkybox : Material;
 
 var firstStarFormation : formationDust = new formationDust();
+var minDust : int = 100;
+var pullToCentre : float = 1;
+
+static var centre : Vector3;
+static var tutorialShowed = false;
+static var tutorial2Showed = false;
+static var tutorial3Showed = false;
 
 function reset(){
 	Debug.Log("Reseting create first stars");
@@ -46,6 +53,7 @@ function setScene(){
 	var skybox = transform.GetComponent(Skybox);
 	skybox.material = newSkybox;
 	var createPos : Vector3 = camera.ScreenToWorldPoint(Vector3(Screen.width/2,Screen.height/2,dustDistance));
+	centre = createPos;
 	var dustRotation : Quaternion;
 	dustRotation.eulerAngles = Vector3(0,dustYRotation,0);
 	firstStarFormation.startDustPosition = createPos;
@@ -56,7 +64,11 @@ function setScene(){
 		firstStarFormation.gravityPlane = firstStarFormation.dust[i].position.y;
 	}
 	transform.GetComponent(panCamera).setStart();
+	transform.GetComponent(panCameraAndroid).setStart();
 	transform.GetComponent(alterTime).playing = true;
+	transform.GetComponent(zoomCamera).playing = true;
+	transform.GetComponent(zoomCameraAndroid).playing = true;
+	
 }
 
 function slowParticles(){
@@ -69,7 +81,7 @@ function slowParticles(){
 	    var i : int = 0;
 	    while (i < l) {
 	    	var newVelocity : Vector3 = p[i].velocity;
-	    	var toSpeed = Random.Range(dustMinSpeed.x,dustMinSpeed.y);
+	    	var toSpeed = firstStarFormation.dustVelocityMax;
 	    	var toVelocity = toSpeed*(p[i].velocity.normalized);
 	    	newVelocity = Vector3.Lerp(newVelocity,toVelocity, dustDecell);
 	    	p[i].velocity = newVelocity;
@@ -95,7 +107,7 @@ function particleSlowed(){
 	    	return false;
 	    }
 	    while (i < l) {
-	    	if(p[i].velocity.magnitude > dustMinSpeed.y){
+	    	if(p[i].velocity.magnitude > firstStarFormation.dustVelocityMax){
 	    		return false;
 	    	}
 			i++;
@@ -110,35 +122,57 @@ function Update () {
 	}
 }
 
+var particlesSpawned = false;
+
 function updateFunction(){
+	
 	if(sceneSetting){
+		if(particlesSpawned){
+			firstStarFormation.cycleThroughScene();
+		}
+		particlesSpawned = true;
 		if(!particleSlowed()){
 			slowParticles();
 			destroyParticles();
+			
 		}
-		else{
+		if(particleSlowed()){
 			for(var j = 0;j < firstStarFormation.dust.length;j++){
 				var particleObject = firstStarFormation.dust[j].GetComponent(ParticleSystem);
 				particleObject.emissionRate = 10;
 				particleObject.startSpeed = dustMinSpeed.y;
 			}	
 			sceneSetting = false;
+			
 		}
 	}
 	else{
 		destroyParticles();
 		firstStarFormation.getMouseGravity();
+		//firstStarFormation.getTouchGravity();
 		firstStarFormation.cycleThroughScene();
+		pullFormationsToCentre();
 		if(firstStarFormation.formedObjects.length > 0){
-			setTutorial2();
+			if(!tutorialShowed){
+				setTutorial2();
+			}
+			if(!GetComponent(menu).tutorialShowing && !tutorial2Showed){
+				setTutorial3();
+			}
 			for(var i = 0;i < firstStarFormation.dust.length;i++){
 				firstStarFormation.dust[i].GetComponent(ParticleSystem).enableEmission = false;
+			}
+		}
+		if(firstStarFormation.formedObjects.length > 1){
+			if(!GetComponent(menu).tutorialShowing && !tutorial3Showed){
+				setTutorial4();
 			}
 		}
 		if(noParticles() && firstStarFormation.formedObjects.length > 0){
 			newGame();
 		}
 	}
+	
 }
 
 /*function createFormation(){
@@ -190,14 +224,25 @@ function noParticles(){
 		var particleObject = firstStarFormation.dust[j].GetComponent(ParticleSystem);
 		var p : ParticleSystem.Particle[] = new ParticleSystem.Particle[particleObject.particleCount+1];
 		var l : int = particleObject.GetParticles(p);
-		if(l > 0){
+		if(l > minDust){
 			if(l <= cameraUnlockNumber){
 				GetComponent(panCamera).infinite = true;
+				GetComponent(panCameraAndroid).infinite = true;
 			}
 			return false;
 		}
 	}
 	return true;
+}
+
+function pullFormationsToCentre(){
+	var formations = firstStarFormation.formedObjects;
+	for(var i = 0;i < formations.length;i++){
+		var distance = Vector3.Distance(formations[i].position,centre);
+		var pull = pullToCentre*(distance * distance)*Time.deltaTime;
+		var direction = centre - formations[i].position;
+		formations[i].GetComponent(gravityWell).velocity += pull*direction;
+	}
 }
 
 function newGame(){
@@ -206,18 +251,37 @@ function newGame(){
 	playing = false;
 	nextGame.setScene(firstStarFormation);
 	GetComponent(panCamera).infinite = true;
+	GetComponent(panCameraAndroid).infinite = true;
 	Debug.Log("Next Game 2");
 }
 
 function setTutorial1(){
 	var tutorial = GetComponent(menu);
-	var str = "Click and drag to drag stardust around. Gather enough stardust in an area and click to create a star.";
-	tutorial.tutorialString = str;
+	var str = "The energy from The Big Bang condensed into matter. At first there was only hydrogen and helium, and these formed the " +
+	"first stars. Click and drag to move gas around. Condense enough gas into one area, then click to create a star.";
+	tutorial.setTutorial(str);
 }
 
 function setTutorial2(){
 	var tutorial = GetComponent(menu);
-	var str = "Click and drag to drag all objects in an area. As long as the mouse button is held down you will continue to drag "+
-	"the objects you have selected.";
-	tutorial.tutorialString = str;
+	var str = "Well done, the first star has formed. Every object has gravity, and will pull in all objects, dust and gas around it." +
+	" As a star absorbs gas it will become larger.";
+	tutorial.setTutorial(str);
+	tutorialShowed = true;
+}
+
+function setTutorial3(){
+	var tutorial = GetComponent(menu);
+	var str = "Double click on an object to centre on it. Move the cursor to the sides of the screen to move the camera. Scroll "+
+	"to move in and out.\n\n\nTry to create another star.";
+	tutorial.setTutorial(str);
+	tutorial2Showed = true;
+}
+
+function setTutorial4(){
+	var tutorial = GetComponent(menu);
+	var str = "Now that you have two stars they can orbit each other. Click and drag on an object to pull it. Try to throw one star " +
+	"around another to get it to orbit.\n\n\nIf you want, make a few more stars. Absorb the rest of the gas to continue to the next stage.";
+	tutorial.setTutorial(str);
+	tutorial3Showed = true;
 }

@@ -3,7 +3,7 @@ Fraser Tehel 2013
 */
 
 class formationDust{
-	static var dust : Transform[] = new Transform[0];
+	var dust : Transform[] = new Transform[0];
 	var startDust : Transform[];
 	var startDustPosition : Vector3;
 	var gravityPlane : float = -30;
@@ -25,6 +25,7 @@ class formationDust{
 	//var formedObjects : Array = new Array();
 	var formedObjects : Transform[] = new Transform[0];
 	var formedObjectsGravityWells : gravityWell[] = new gravityWell[0];
+	var formedObjectsAsteroids : asteroid[] = new asteroid[0];
 	var formedObjectsFormationObjects : formationObject[] = new formationObject[0];
 	var formedObjectsPrefabs : Transform[] = new Transform[0];
 	var maxFormationDistance : float;
@@ -33,10 +34,12 @@ class formationDust{
 	var maxFormationSpeed : float = 15;
 	static var formationDraging : Transform;
 	static var formationsDragging : Transform[] = new Transform[0];
+	var maxGroupDragSize : float = 1;
 	
 	var mouseGravMass : float = 10;
 	var mouseGravDrag : float = 1;
 	var mouseGravDistance : float = 2;
+	var mouseGravDistanceToZoom = 0.1;
 	var mouseGravParticleDistance : float = 10;
 	var mouseDragDropOff : float = 0;
 	
@@ -61,8 +64,22 @@ class formationDust{
 	static var lastTimeScale : float = 1;
 	
 	var returnToPlaneRate : float = 1;
+	var dustSystemMass : float = 20;
+	
+	var particlePush : float = 1;
+	var pushDistance : float = 1;
+	var perfectOrbitMaxThreshold : float = 0.3;
+	var perfectOrbitMinThreshold : float = 0.1;
+	var perfectSpeedToAngleRatio : float = 1;
+	var pullThreshold : float = 0.001;
+	var minMassRatioForPull : float = 0.1;
 	
 	function transferStats(other : formationDust){
+		perfectOrbitMaxThreshold = other.perfectOrbitMaxThreshold;
+		perfectOrbitMinThreshold = other.perfectOrbitMinThreshold;
+		pushDistance = other.pushDistance;
+		particlePush = other.particlePush;
+		dustSystemMass = other.dustSystemMass;
 		particleDrag = other.particleDrag;
 		maxParticleDistance = other.maxFormationDistance;
 		dust = other.dust;
@@ -86,6 +103,7 @@ class formationDust{
 		formedObjectsFormationObjects = other.formedObjectsFormationObjects;
 		formedObjectsGravityWells = other.formedObjectsGravityWells;
 		formedObjectsPrefabs = other.formedObjectsPrefabs;
+		formedObjectsAsteroids = other.formedObjectsAsteroids;
 		
 		maxFormationDistance = other.maxFormationDistance;
 		formationMassEffect = other.formationMassEffect;
@@ -116,10 +134,22 @@ class formationDust{
 		
 		explosionSpeed = other.explosionSpeed;
 		returnToPlaneRate = other.returnToPlaneRate;
+		maxGroupDragSize = other.maxGroupDragSize;
 		addAllFormations();
+		transferStats(other, true);
 	}
 	
 	function transferStats(other : formationDust, exclude : boolean){
+		minMassRatioForPull = other.minMassRatioForPull;
+		formations = other.formations;
+		prefabs = other.prefabs;
+		mouseGravDistanceToZoom = other.mouseGravDistanceToZoom;
+		perfectOrbitMaxThreshold = other.perfectOrbitMaxThreshold;
+		perfectOrbitMinThreshold = other.perfectOrbitMinThreshold;
+		//perfectOrbitThreshold = other.perfectOrbitThreshold;
+		pushDistance = other.pushDistance;
+		particlePush = other.particlePush;
+		dustSystemMass = other.dustSystemMass;
 		mouseGravParticleDistance = other.mouseGravParticleDistance;
 		particleDrag = other.particleDrag;
 		maxParticleDistance = other.maxFormationDistance;
@@ -163,9 +193,13 @@ class formationDust{
 		particlesToDestroy = other.particlesToDestroy;
 		particleDestroyLocation = other.particleDestroyLocation;
 		particleDestroyDistance = other.particleDestroyDistance;
+		maxGroupDragSize = other.maxGroupDragSize;
 		
 		explosionSpeed = other.explosionSpeed;
 		returnToPlaneRate = other.returnToPlaneRate;
+		pullThreshold = other.pullThreshold;
+		addAllFormations();
+
 	}
 	
 	function formedObjectsAdd(object : Transform){
@@ -177,8 +211,10 @@ class formationDust{
 		formedObjects = temp;
 		var gravWell = object.GetComponent(gravityWell);
 		var formObject = object.GetComponent(formationObject);
+		var newAsteroid = object.GetComponent(asteroid);
 		formedGravAdd(gravWell);
 		formedFormationsAdd(formObject);
+		formedAsteroidAdd(newAsteroid);
 	}
 	
 	function formedGravAdd(gravWell : gravityWell){
@@ -190,6 +226,15 @@ class formationDust{
 		newWell.transferStats(gravWell);
 		temp[formedObjectsGravityWells.length] = newWell;
 		formedObjectsGravityWells = temp;
+	}
+	
+	function formedAsteroidAdd(other : asteroid){
+		var temp = new asteroid[formedObjectsAsteroids.length + 1];
+		for(var i = 0;i < formedObjectsAsteroids.length;i++){
+			temp[i] = formedObjectsAsteroids[i];
+		}
+		temp[formedObjectsAsteroids.length] = other;
+		formedObjectsAsteroids = temp;
 	}
 	
 	function formedFormationsAdd(formation : formationObject){
@@ -216,6 +261,7 @@ class formationDust{
 		formedGravWellsRemove(index);
 		formedFormationsRemove(index);
 		formedPrefabsRemove(index);
+		formedAsteroidsRemove(index);
 		var temp = new Transform[formedObjects.length - 1];
 		var i = 0;
 		var j = 0;
@@ -245,6 +291,25 @@ class formationDust{
 		}
 		else{
 			formedObjectsGravityWells = temp;
+		}
+	}
+	
+	function formedAsteroidsRemove(index : int){
+		var temp = new asteroid[formedObjectsAsteroids.length - 1];
+		if(formedObjectsAsteroids.length > 0){
+			var i = 0;
+			var j = 0;
+			while(i < formedObjectsAsteroids.length){
+				if(i != index){
+					temp[j] = formedObjectsAsteroids[i];
+					j++;
+				}
+				i++;
+			}
+			formedObjectsAsteroids = temp;
+		}
+		else{
+			formedObjectsAsteroids = temp;
 		}
 	}
 	
@@ -379,13 +444,14 @@ class formationDust{
 		    	var newVelocity = pullParticleToWell(p[i]);
 		    	var pVelocity = Vector3.zero;
 		    	var h = i % dustGroups;
+		    	//var h : int = Random.Range(0,dustGroups);
 		    	if(p[i].lifetime > dustDeathTime){
 		    		while(h < l){
 			    		pVelocity += pullParticleToParticle(p[i],p[h]);
 			    		h += dustGroups;
 			    	}
 			    	if(pVelocity.magnitude > dustVelocityMax){
-			    		pVelocity = limitVector(pVelocity);
+			    		//pVelocity = limitVector(pVelocity);
 			    	}
 					newVelocity += pVelocity;
 					if(newVelocity.magnitude > dustVelocityMax){
@@ -443,6 +509,20 @@ class formationDust{
 		createFormation();
 	}
 	
+	function createTouchGravWell(){
+		var ray : Ray = Camera.main.ScreenPointToRay(Input.touches[0].position);
+		var planePosition = Vector3(0,gravityPlane,0);
+		var hPlane : Plane = new Plane(Vector3.up, planePosition);
+		var distance : float = 0;
+		var position : Vector3;
+		if(hPlane.Raycast(ray, distance)){
+		    position = ray.GetPoint(distance);
+		}
+		mouseGrav.position = position;
+		dragFormationWithRay();
+		createFormation();
+	}
+	
 	function getMouseGravity(){
 		if(Input.GetMouseButton(0) && !mouseGravExists){
 			mouseGravExists = true;
@@ -454,6 +534,23 @@ class formationDust{
 			setMouseDrag();
 		}
 		if(!Input.GetMouseButton(0) && mouseGravExists){
+			mouseGravExists = false;
+			formationDraging = null;
+			clearFormationsDragging();
+		}
+	}
+	
+	function getTouchGravity(){
+		if(Input.touches.Length == 1 && !mouseGravExists){
+			mouseGravExists = true;
+			createTouchGravWell();
+			lastMousePos = mouseGrav.position;
+		}
+		if(Input.touches.Length == 1 && mouseGravExists){
+			createTouchGravWell();
+			setMouseDrag();
+		}
+		if(Input.touches.Length == 0 && mouseGravExists){
 			mouseGravExists = false;
 			formationDraging = null;
 			clearFormationsDragging();
@@ -483,6 +580,7 @@ class formationDust{
 	function pullParticleToParticle(q : ParticleSystem.Particle, r : ParticleSystem.Particle){
 		var newVelocity : Vector3;
 		newVelocity = getGravity(q.position, r.position, dustMass * dustGroups, dustMass)*Time.deltaTime;
+		newVelocity += getPush(q.position, r.position, dustMass * dustGroups, dustMass,q.size)*Time.deltaTime;
 		newVelocity.y = 0;
 		return newVelocity;
 	}
@@ -518,8 +616,8 @@ class formationDust{
 	function dragParticlePosition(p : ParticleSystem.Particle){
 		var position = p.position;
 		var distance = Vector3.Distance(p.position, mouseGrav.position);
-		if(distance <= mouseGravDistance){
-			var percent = 1-(distance/mouseGravDistance);
+		if(distance <= getMouseGravDistance()){
+			var percent = 1-(distance/getMouseGravDistance());
 			percent *= mouseDragDropOff;
 			if(percent > 1){
 				percent = 1;
@@ -548,8 +646,8 @@ class formationDust{
 	}
 	
 	function getMousePull(distance : float, thisMass : float, extraRange : float){
-		if(distance <= mouseGravDistance + extraRange){
-			var percent = 1-(distance/(mouseGravDistance+extraRange));
+		if(distance <= getMouseGravDistance() + extraRange){
+			var percent = 1-(distance/(getMouseGravDistance()+extraRange));
 			if(percent > 1){
 				percent = 1;
 			}
@@ -579,7 +677,8 @@ class formationDust{
 		if(lifetime > dustDeathTime){
 			for(var i = 0;i < formedObjects.length;i++){
 				if(formedObjects[i]!= null){
-					if(formedObjects[i].GetComponent(formationObject).inDustTypes(tag) && Vector3.Distance(p.position,formedObjects[i].position) < (formedObjects[i].localScale.y/2) + 0.1){
+					if(formedObjects[i].GetComponent(formationObject).inDustTypes(tag) && Vector3.Distance(p.position,formedObjects[i].position) < (formedObjects[i].localScale.y/2) + 0.1 + 
+					(formedObjects[i].GetComponent(formationObject).dustDistance/2)){
 						formedObjects[i].GetComponent(formationObject).mergeWithDust(p, tag);
 						lifetime = dustDeathTime;
 					}
@@ -593,7 +692,8 @@ class formationDust{
 		var velocity = p.velocity;
 		for(var i = 0;i < formedObjects.length;i++){
 			if(formedObjects[i] != null){
-				if(formedObjects[i].GetComponent(formationObject).inDustTypes(tag) && Vector3.Distance(p.position,formedObjects[i].position) < formedObjects[i].localScale.y/2){
+				if(formedObjects[i].GetComponent(formationObject).inDustTypes(tag) && Vector3.Distance(p.position,formedObjects[i].position) < formedObjects[i].localScale.y/2 +
+				(formedObjects[i].GetComponent(formationObject).dustDistance/3)){
 					velocity = formedObjects[i].GetComponent(gravityWell).velocity;
 				}
 			}
@@ -609,19 +709,48 @@ class formationDust{
 		}
 		return p.size - s;
 	}
-	
+		
 	function getGravity(thisPos : Vector3, well : Vector3, thisMass : float, otherMass : float){
 		var distance = Vector3.Distance(thisPos,well);
-		var thisGravity : Vector3 = (well - thisPos);
-		thisGravity = thisGravity.normalized;
-		thisGravity *= getPull(distance,thisMass,otherMass);
-		return thisGravity*gravityStrength;
+		var thisGravity = Vector3.zero;
+		if(distance > 0){
+			thisGravity = (well - thisPos);
+			thisGravity = thisGravity.normalized;
+			var pull = getPull(distance,thisMass,otherMass);
+			if(pull > pullThreshold){
+				thisGravity *= pull;
+				return thisGravity;
+			}
+		}
+		return thisGravity;
+	}
+	
+	function getPush(thisPos : Vector3, well : Vector3, thisMass : float, otherMass : float, size : float){
+		var distance = Vector3.Distance(thisPos,well);
+		var thisGravity = Vector3.zero;
+		if(distance > 0 && distance <= size){
+			thisGravity = (well - thisPos);
+			thisGravity = thisGravity.normalized;
+			var percent = 1-(distance/(size));
+			if(percent > 1){
+				percent = 1;
+			}
+			if(percent < 0){
+				percent = 0;
+			}
+			var push : float = particlePush*Mathf.Pow(percent,pushDistance);
+			thisGravity *= push;
+			
+			return -thisGravity;
+		}
 	}
 	
 	function getPull(distance : float, thisMass : float,otherMass : float){
-		var massPow = Mathf.Pow(thisMass,gravityMass);
-		var pull = ((massPow*otherMass)/Mathf.Pow(distance,gravityDistance));
-		return pull/massPow;
+		var massPow = Mathf.Pow(otherMass,gravityMass);
+		var thisPow = Mathf.Pow(thisMass,gravityMass);
+		var distancePow = distance*gravityDistance;
+		var pull = (gravityStrength*(massPow))/(distancePow*distancePow);
+		return pull;
 	}
 	
 	function limitVector(vector : Vector3){
@@ -684,6 +813,10 @@ class formationDust{
 				formedObjects[formedObjects.length-1].GetComponent(formationObject).transferStats(formations[i]);
 				formedObjects[formedObjects.length-1].localScale = Vector3.zero;
 				createFormation(formations[i],mouseGrav.position);
+				var grav = formedObjects[formedObjects.length-1].GetComponent(gravityWell);
+				if(formedObjects.Length > 1){
+					grav.velocity = getStartPerfectVelocity(grav);
+				}
 			}
 		}
 	}
@@ -701,20 +834,24 @@ class formationDust{
 	
 		formedObjects[length-1].localScale = Vector3.zero;
 		formedObjects[length-1].GetComponent(gravityWell).mass = mass;
-		formedObjects[length-1].GetComponent(gravityWell).velocity = velocity;
+		//velocity = formedObjects[length-1].GetComponent(gravityWell).velocity;
 		formedObjects[length-1].GetComponent(formationObject).transferStats(other);
 		//solarSystemDust.formedObjects[length-1].GetComponent(formationObject).growAmount = Mathf.Pow(mass/(1.33*3.14),0.33)*other.massRadiusstarRatio*2;
 		//solarSystemDust.formedObjects[length-1].GetComponent(formationObject).growAmount = 1;
 		formedObjects[length-1].GetComponent(formationObject).newGrowRate = speed;
 		formedObjects[length-1].GetComponent(formationObject).setDustAmount("firstGas", mass);
 		formedObjects[length-1].GetComponent(gravityWell).position = thisPos;
+		if(formedObjects.Length > 1){
+			velocity = getStartPerfectVelocity(formedObjects[length-1].GetComponent(gravityWell));
+		}
+		formedObjects[length-1].GetComponent(gravityWell).velocity = velocity;
 	}
 	
 	function createFormation(formation : formation, position : Vector3){
 		for(var i = 0;i < formation.dustTypes.length;i++){
 			addToDestroyList(formation.dustTypes[i]);
 		}
-		particleDestroyDistance = formation.dustDistance;
+		particleDestroyDistance = formation.dustDistance * 2;
 		particleDestroyLocation = position;
 	}
 	
@@ -778,8 +915,10 @@ class formationDust{
 			if(Vector3.Distance(p.position,particleDestroyLocation) <= particleDestroyDistance){
 				var index = inDestroyList(type);
 				if(index > -1){
-					particlesToDestroy[index].dustAmount --;
-					lifetime = dustDeathTime;
+					if(particlesToDestroy[index].dustAmount > 0){
+						particlesToDestroy[index].dustAmount --;
+						lifetime = dustDeathTime;
+					}
 				}
 			}
 		}
@@ -809,7 +948,7 @@ class formationDust{
 	
 	function cycleThroughFormations(){
 		for(var i = 0;i < formedObjects.length;i++){
-			repairFormedObject(i);
+			//repairFormedObject(i);
 			clearFormationsDragging();
 			if(formedObjects[i] != null){
 				//var velocity = formedObjects[i].GetComponent(gravityWell).velocity;
@@ -821,6 +960,10 @@ class formationDust{
 					if(formationDraging == formedObjects[i]){
 						formedObjects[i].GetComponent(gravityWell).velocity = dragFormationGroup(formedObjects[i]);
 					}
+					if(formationDraging != formedObjects[i] && inFormationsDragging(formedObjects[i]) && 
+					formedObjects[i].localScale.x <= maxGroupDragSize){
+						formedObjects[i].GetComponent(gravityWell).velocity = dragFormationGroup(formedObjects[i]);
+					}
 				}
 				//formedObjects[i].GetComponent(gravityWell).velocity = dragFormation(formedObjects[i],formedObjects[i].localScale.y/2);
 				formedObjects[i].GetComponent(gravityWell).velocity = collisionDrag(formedObjects[i],i);
@@ -828,8 +971,23 @@ class formationDust{
 				//formedObjects[i].GetComponent(gravityWell).velocity = alterTimeScale(formedObjects[i].GetComponent(gravityWell).velocity);
 				destroyFormation(i);
 			}
+			/*if(formedObjects.Length > 1){
+				var other = getStrongestPull(formedObjects[i].position).position;
+				var distance = Vector3.Distance(formedObjects[i].position,other);
+				if(distance > maxDistance || maxDistance == -1){
+					maxDistance = distance;
+				}
+				if(distance < minDistance || minDistance == -1){
+					minDistance = distance;
+				}
+				distanceRange = maxDistance- minDistance;
+			}*/
 		}
 	}
+	
+	/*var distanceRange : float;
+	var maxDistance : float = -1;
+	var minDistance : float = -1;*/
 	
 	function pullFormationToWell(formation : Transform, exlude : int){
 		var newVelocity : Vector3 = Vector3.zero;
@@ -838,8 +996,9 @@ class formationDust{
 		for(var j : int = 0; j < formedObjects.length;j++){
 			if(formedObjects[j]!= null){
 				var gravWell = formedObjects[j].GetComponent(gravityWell);
-				if(j != exlude){
-					newVelocity += getGravity(formation.position, gravWell.position, formationMass, gravWell.mass)*Time.deltaTime;
+				var mass = gravWell.mass;
+				if(j != exlude && mass > formationMass* minMassRatioForPull){
+					newVelocity += getGravity(formation.position, gravWell.position, formationMass, mass)*Time.deltaTime;
 				}
 			}
 		}
@@ -847,7 +1006,7 @@ class formationDust{
 			//newVelocity += getMouseGravity(formation.position, formationMass, formation.localScale.x/2, true)*Time.deltaTime;
 		}
 		newVelocity.y = 0;
-		newVelocity /= Mathf.Pow(formationMass, gravityMass/4);
+		//newVelocity /= Mathf.Pow(formationMass, gravityMass/4);
 		newVelocity += originalVelocity;
 		if(newVelocity.magnitude > maxFormationSpeed){
 			newVelocity = newVelocity.normalized*originalVelocity.magnitude;
@@ -867,7 +1026,7 @@ class formationDust{
 	
 	function selectFormationToDrag(){
 		if(formationDraging == null){
-			var closestDistance = mouseGravDistance;
+			var closestDistance = getMouseGravDistance();
 			var closestInt = -1;
 			for(var i = 0;i < formationsDragging.length;i++){
 				var distance = Vector3.Distance(formationsDragging[i].position, mouseGrav.position);
@@ -906,9 +1065,11 @@ class formationDust{
 	}
 	
 	function addFormationToDrag(formation : Transform, extraDistance : float){
-		var distance = Vector3.Distance(formation.position, mouseGrav.position);
-		if(distance <= mouseGravDistance + extraDistance){
-			addFormationToDrag(formation);
+		if(!formationIsTracking(formation)){
+			var distance = Vector3.Distance(formation.position, mouseGrav.position);
+			if(distance <= getMouseGravDistance() + extraDistance){
+				addFormationToDrag(formation);
+			}
 		}
 	}
 	
@@ -925,17 +1086,123 @@ class formationDust{
 		return -1;
 	}
 	
+	function getStrongestPull(pos : Vector3){
+		var highest : int = -1;
+		var highestGrav : float = 0;
+		for(var i = 0;i < formedObjects.length;i++){
+			if(Vector3.Distance(pos,formedObjects[i].position) > formedObjects[i].localScale.x/2){
+				var mass = formedObjects[i].GetComponent(gravityWell).mass;
+				var magnitude = getGravity(pos, formedObjects[i].position, 1, mass).magnitude;
+				if(magnitude > highestGrav){
+					highestGrav = magnitude;
+					highest = i;
+				}
+			}
+		}
+		if(highest != -1){
+			return formedObjects[highest].GetComponent(gravityWell);
+		}
+	}
+	
+	function getPerfectOrbitSpeed(well : gravityWell , other : gravityWell){
+		var massPow = Mathf.Pow(other.mass,gravityMass);
+		var thisPow = Mathf.Pow(well.mass,gravityMass);
+		var distance = Vector3.Distance(well.position,other.position);
+		var distancePow = distance*gravityDistance;
+		var m = getPull(other.mass,well.mass,distance)*Time.deltaTime;
+		var x = Mathf.Sqrt((gravityStrength * (massPow))/distancePow);
+		return x;
+	}
+	
+	/*function getPerfectOrbitSpeed(well : gravityWell , other : gravityWell){
+		var massPow = Mathf.Pow(other.mass,gravityMass);
+		var thisPow = Mathf.Pow(well.mass,gravityMass);
+		var distance = (well.position-other.position).magnitude;
+		var distancePow = distance*gravityDistance;
+		
+		var m = getPull(other.mass,well.mass,distance);
+		var x = Mathf.Sqrt((distance * distance) - ((distance - m) * (distance - m)));
+		return x;
+	}*/
+	
+	/*function getPerfectOrbitSpeed(well : gravityWell , other : gravityWell){
+		var m = Mathf.Pow(other.mass,gravityMass);
+		var thisPow = Mathf.Pow(well.mass,gravityMass);
+		var distance = (well.position-other.position).magnitude;
+		var d = distance*gravityDistance;
+		var f = getPull(m,m,d)*Time.deltaTime;
+		var x = Mathf.Sqrt(Mathf.Abs((f*d)-(m*d)));
+		return x*Time.deltaTime;
+	}*/
+	
+	function getPerfectOrbitVelocity(well : gravityWell , other : gravityWell){
+		var angle = other.position - well.position;
+		angle = angle.normalized;
+		var right = Vector3(angle.z,angle.y,-angle.x);
+		var dot = Vector3.Dot(well.velocity.normalized,right);
+		if(dot < 0){
+			right = -right;
+		}
+		return ((right * getPerfectOrbitSpeed(well , other)) + other.velocity);
+	}
+	
+	function getStartPerfectVelocity(well : gravityWell){
+		var other = getStrongestPull(well.position);
+		var v = getPerfectOrbitVelocity(well , other);
+		//v += getGravity(well.position, other.position, well.mass, other.mass)*Time.deltaTime;
+		return v;
+	}
+	
+	function getPerfectOrbitVelocity(v : Vector3, well : gravityWell){
+		var other = getStrongestPull(well.position);
+		if(other.mass > well.mass){
+			return getPerfectOrbitVelocity(well , other);
+		}
+		return v;
+	}
+	
+	function snapToPerfect(velocity : Vector3, well : gravityWell){
+		var perfect = getPerfectOrbitVelocity(velocity, well);
+		var v = velocity;
+		var m = velocity.magnitude;
+		var m2 = perfect.magnitude;
+		var speedPercent = m/m2;
+		speedPercent*=perfectSpeedToAngleRatio;
+		if(speedPercent > 1){
+			speedPercent = 1;
+		}
+		var speedDifference = Mathf.Abs(speedPercent - 1);
+		var directionDifference = Mathf.Abs(1-Vector3.Dot(perfect.normalized,v.normalized));
+		var meanDifference = (speedDifference + directionDifference)/2;
+		if(meanDifference <= perfectOrbitMinThreshold){
+			v = perfect;
+		}
+		else if(meanDifference <= perfectOrbitMaxThreshold){
+			var x = meanDifference - perfectOrbitMinThreshold;
+			var y = perfectOrbitMaxThreshold - perfectOrbitMinThreshold;
+			var percent = 1 - (x/y);
+			var XPercent = 1 - percent;
+			var V1 = v * XPercent;
+			var V2 = perfect * percent;
+			v = (V1+V2)/2;
+		}
+		return v;
+	}
+	
 	function dragFormation(f : Transform, extraDistance : float){
 		var movement = f.GetComponent(gravityWell).velocity;
 		var distance = Vector3.Distance(f.position, mouseGrav.position);
-		if(distance <= mouseGravDistance + extraDistance){
-			var percent = 1-(distance/(mouseGravDistance+extraDistance));
+		if(distance <= getMouseGravDistance() + extraDistance){
+			var percent = 1-(distance/(getMouseGravDistance()+extraDistance));
 			percent *= mouseDragDropOff;
 			if(percent > 1){
 				percent = 1;
 			}
 			movement = Vector3.Lerp(movement,getMouseDrag(percent)/Time.deltaTime,formationDrag/Mathf.Pow(f.GetComponent(gravityWell).mass,formationMassEffect));
-		}
+			if(formedObjects.length > 1){
+				movement = snapToPerfect(movement,f.GetComponent(gravityWell));
+			}
+		}	
 		return movement;
 	}
 	
@@ -943,6 +1210,9 @@ class formationDust{
 		var movement = f.GetComponent(gravityWell).velocity;
 		var distance = Vector3.Distance(f.position, mouseGrav.position);
 		movement = Vector3.Lerp(movement,getMouseDrag(1)/Time.deltaTime,formationDrag/Mathf.Pow(f.GetComponent(gravityWell).mass,formationMassEffect));
+		if(formedObjects.length > 1){
+			movement = snapToPerfect(movement,f.GetComponent(gravityWell));
+		}
 		return movement;
 	}
 	
@@ -966,9 +1236,9 @@ class formationDust{
 	function dragFormationPosition(f : Transform, extraDistance : float){
 		var position = f.position;
 		var distance = Vector3.Distance(f.position, mouseGrav.position);
-		if(distance <= mouseGravDistance + extraDistance){
+		if(distance <= getMouseGravDistance() + extraDistance){
 			var posAdd = Vector3.zero;
-			var percent = 1-(distance/(mouseGravDistance+extraDistance));
+			var percent = 1-(distance/(getMouseGravDistance()+extraDistance));
 			percent *= mouseDragDropOff;
 			if(percent > 1){
 				percent = 1;
@@ -998,10 +1268,10 @@ class formationDust{
 	
 	function collideFormation(formation : Transform, exclude : int){
 		for(var i = 0;i < formedObjects.length;i++){
-			if(i != exclude){
+			if(i != exclude && formedObjects[i] != null){
 				var otherSize = formedObjects[i].localScale.x;
 				var thisSize = formation.localScale.x;
-				if(otherSize >= thisSize){
+				if(otherSize >= thisSize * 0.85){
 					if(Vector3.Distance(formation.position,formedObjects[i].position) <= (otherSize/2)){
 						formedObjects[i].GetComponent(gravityWell).velocity = getAverageVelocity(formedObjects[i],formation);
 						//var other = formedObjects[i].GetComponent(formationObject);
@@ -1036,7 +1306,7 @@ class formationDust{
 	function collisionDrag(formation : Transform, exclude : int){
 		var velocity = formation.GetComponent(gravityWell).velocity;
 		for(var i = 0;i < formedObjects.length;i++){
-			if(i != exclude){
+			if(i != exclude && formedObjects[i]!=null){
 				var otherSize = formedObjects[i].localScale.x;
 				var thisSize = formation.localScale.x;
 				if(otherSize >= thisSize && Vector3.Distance(formation.position,formedObjects[i].position) < (otherSize/2) + (thisSize/2)){
@@ -1080,6 +1350,9 @@ class formationDust{
 			Quaternion.identity);
 			formedObjects[index].GetComponent(gravityWell).transferStats( formedObjectsGravityWells[index]);
 			formedObjects[index].GetComponent(formationObject).transferStats( formedObjectsFormationObjects[index]);
+			if (formedObjects[index].GetComponent(asteroid)!=null){
+				formedObjects[index].GetComponent(asteroid).transferStats(formedObjectsAsteroids[index]);
+			}
 		}
 		else{
 			storeFormedObjectStats(index);
@@ -1089,6 +1362,9 @@ class formationDust{
 	function storeFormedObjectStats(index : int){
 		formedObjectsFormationObjects[index].transferStats(formedObjects[index].GetComponent(formationObject));
 		formedObjectsGravityWells[index].transferStats(formedObjects[index].GetComponent(gravityWell));
+		if(formedObjectsAsteroids[index]!=null){
+			formedObjectsAsteroids[index].transferStats(formedObjects[index].GetComponent(asteroid));
+		}
 	}
 	
 	function transformMissing(thing : Transform){
@@ -1099,5 +1375,43 @@ class formationDust{
 		catch(err){
 			return true;
 		}
+	}
+	
+	function totalMass(){
+		var mass : float;
+		for(var i = 0;i < formedObjects.length;i++){
+			mass+=formedObjects[i].GetComponent(gravityWell).mass;
+		}
+		return mass;
+	}
+	
+	function massPercent(mass : float){
+		if(totalMass() == 0){
+			return 1;
+		}
+		return mass/totalMass();
+	}
+	
+	function centreMass(){
+		var position = Vector3.zero;
+		for(var i = 0;i < formedObjects.length;i++){
+			var mass = formedObjects[i].GetComponent(gravityWell).mass;
+			position += formedObjects[i].position * massPercent(mass);
+		}
+		return position;
+	}
+	
+	function formationIsTracking(formation : Transform){
+		var tracking = Camera.main.GetComponent(cameraTracking).target;
+		if(tracking == formation){
+			return true;
+		}
+		return false;
+	}
+	
+	function getMouseGravDistance(){
+		var height = Camera.main.transform.position.y - gravityPlane;
+		var range = height* mouseGravDistanceToZoom * mouseGravDistance;
+		return range;
 	}
 }

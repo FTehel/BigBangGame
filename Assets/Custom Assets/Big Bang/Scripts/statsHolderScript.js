@@ -27,4 +27,24 @@ function findStats(){
 		var other4 = main.GetComponent(createSolarSystem);
 		GetComponent(createSolarSystem).transferStats(other4);
 	}
+	if(main.GetComponent(zoomCamera) != null){
+		var other5 = main.GetComponent(zoomCamera);
+		GetComponent(zoomCamera).transferStats(other5);
+	}
+	if(main.GetComponent(panCamera) != null){
+		var other7 = main.GetComponent(panCamera);
+		GetComponent(panCamera).transferStats(other7);
+	}
+	if(main.GetComponent(cameraTracking) != null){
+		var other6 = main.GetComponent(cameraTracking);
+		GetComponent(cameraTracking).transferStats(other6);
+	}
+	if(main.GetComponent(zoomCameraAndroid) != null){
+		var other8 = main.GetComponent(zoomCameraAndroid);
+		GetComponent(zoomCameraAndroid).transferStats(other8);
+	}
+	if(main.GetComponent(panCameraAndroid) != null){
+		var other9 = main.GetComponent(panCameraAndroid);
+		GetComponent(panCameraAndroid).transferStats(other9);
+	}
 }

@@ -39,7 +39,7 @@
 			while(!otherFound && j < otherProp.length){
 				if(otherProp[i].typeEquals(otherProp[j])){
 					otherFound = true;
-					n += Mathf.Abs(thisProp[i].dustPercent - otherProp[j].dustPercent);
+					n += Mathf.Abs(thisProp[i].dustAmount - otherProp[j].dustAmount);
 				}
 				j++;
 			}
@@ -50,11 +50,11 @@
 	function getProportionPercentage(proportions : dustProportion[]){
 		var n : float;
 		for(var i = 0;i < proportions.length;i++){
-			n+=proportions[i].dustPercent;
+			n+=proportions[i].dustAmount;
 		}
 		var returnArray = new dustProportion[proportions.length];
 		for(var j = 0;j < dustTypes.length;j++){
-			var newDust = new dustProportion(proportions[j].dustType,proportions[j].dustPercent/n);
+			var newDust = new dustProportion(proportions[j].dustType,proportions[j].dustAmount/n);
 			returnArray[j] = newDust;
 		}
 		return returnArray;

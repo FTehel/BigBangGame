@@ -11,10 +11,17 @@ var orbitSpeed : float = 0.2;
 var supernovaSpeedToMass1 : float = 1;
 var supernovaSpeedToMass2 : float = 1;
 var maxOrbitCount = 25;
+var supernovaLight : Transform;
+var newZoomLimits = Vector2(5,100);
 
 static var orbitCount : float = 0;
 
 static var levelled = false;
+static var cleaned = false;
+static var tutorialShowed = false;
+static var tutorial2Showed = false;
+static var tutorial3Showed = false;
+static var tutorial4Showed = false;
 
 function Update () {
 	if(playing){
@@ -25,6 +32,7 @@ function Update () {
 function reset(){
 	Debug.Log("Reseting create solar system");
 	transform.GetComponent(panCamera).setStart();
+	transform.GetComponent(panCameraAndroid).setStart();
 	for(var j = 0;j < solarSystemDust.formedObjects.length;j++){
 		Destroy(solarSystemDust.formedObjects[j].gameObject);
 	}
@@ -37,7 +45,10 @@ function reset(){
 
 function setScene(stats : formationDust){
 	solarSystemDust.transferStats(stats);
+	GetComponent(zoomCamera).setLimits(newZoomLimits);
+	GetComponent(zoomCameraAndroid).setLimits(newZoomLimits);
 	setTutorial1();
+	getStats();
 }
 
 function Start(){
@@ -51,16 +62,24 @@ function getStats(){
 		transferStats(stats.GetComponent(createSolarSystem));
 		solarSystemDust.transferStats(stats.GetComponent(statsHolderScript).stats,true);
 	}
+	setTutorial1();
+	if(playing){
+		GetComponent(zoomCamera).setLimits(newZoomLimits);
+		GetComponent(zoomCameraAndroid).setLimits(newZoomLimits);
+	}
 }
 
 function updateFunction(){
 	solarSystemDust.cycleThroughParticles();
 	solarSystemDust.cycleThroughFormations();
 	solarSystemDust.getMouseGravity();
+	//solarSystemDust.getTouchGravity();
 	supernovaStar();
 	countDownFreezeTime();
 	unfreeze();
 	cycleThroughSupernovae();
+	hasStar();
+	hasAsteroid();
 }
 
 /*function createFormation(position : Vector3, formation : Transform, mass : float, velocity : Vector3, other : formation, speed : float){
@@ -86,9 +105,34 @@ function updateFunction(){
 
 function setTutorial1(){
 	var tutorial = GetComponent(menu);
-	var str = "Click and drag to drag all objects in an area. As long as the mouse button is held down you will continue to drag "+
-	"the objects you have selected.";
-	tutorial.tutorialString = str;
+	var str = "Now that you've turned all the light gas into stars we need to make some heavier elements. When stars go supernova "+
+	"they release heavier elements. Click and hold on a star to make it go supernova. The supernova shockwave will also supernova "+
+	"other stars.";
+	tutorial.setTutorial(str);
+	tutorialShowed = true;
+}
+
+function setTutorial2(){
+	var tutorial = GetComponent(menu);
+	var str = "Supernovae leave behind nubelae, made of dust and gas. Make a star out of gas.\n\n\nRed = Gas\n\nBlue = Dust";
+	tutorial.setTutorial(str);
+	tutorial2Showed = true;
+}
+
+function setTutorial3(){
+	var tutorial = GetComponent(menu);
+	var str = "Now, make some asteroids out of dust.";
+	tutorial.setTutorial(str);
+	tutorial3Showed = true;
+}
+
+function setTutorial4(){
+	var tutorial = GetComponent(menu);
+	var str = "Well done. You can drag whole groups of asteroids at a time, provided they're small enough." + 
+	" When an asteroid gets large enough it becomes a planet. Make some asteroids gather enough dust and other asteroids to become "+
+	"a planet.";
+	tutorial.setTutorial(str);
+	tutorial4Showed = true;
 }
 
 function supernovaStar(){
@@ -125,6 +169,8 @@ function supernovaStar(){
 						currentFreezeTime = freezeTime;
 						levelled = false;
 					}
+					var explosion = UnityEngine.Object.Instantiate(supernovaLight,formedObjects[i].position, Quaternion.identity);
+					addToSupernovae(explosion);
 					if(solarSystemDust.formedObjects[i] == solarSystemDust.formationDraging){
 						solarSystemDust.formationDraging = null;
 					}
@@ -134,10 +180,12 @@ function supernovaStar(){
 					}
 					UnityEngine.Object.Destroy(formedObjects[i].gameObject);
 					solarSystemDust.formedObjectsRemove(i);
+					cleanOldDust();
 				}
 			}
 		}
 	}
+	
 }
 
 function addToSupernovae(nebula : Transform){
@@ -189,13 +237,14 @@ function ruptureFormation(p : ParticleSystem.Particle){
 		var star = formedObjects[i].GetComponent(star);
 		if(star!= null && star.firstStar){
 			var gravWell = formedObjects[i].GetComponent(gravityWell);
-			if(Vector3.Distance(p.position,gravWell.position) <= formedObjects[i].localScale.x/2){
+			if(Vector3.Distance(p.position,gravWell.position) <= (formedObjects[i].localScale.x/2) + (p.size/2)){
 				var speed : float;
 				for(var j = 0;j < supernovaParticles.length;j++){
 					var fObject = formedObjects[i].GetComponent(formationObject);
 					var pNumber = 0;
 					var SNDust = UnityEngine.Object.Instantiate(supernovaParticles[j],formedObjects[i].position, Quaternion.identity);
 					var particleObject = SNDust.GetComponent(ParticleSystem);
+					Debug.Log(particleObject);
 					for(var k = 0;k < fObject.dustTypes.length;k++){
 						pNumber += fObject.dustTypes[k].dustAmount;
 					}
@@ -215,9 +264,9 @@ function ruptureFormation(p : ParticleSystem.Particle){
 					levelled = false;
 					orbitCount = 0;
 				}
-				if(solarSystemDust.formedObjects[i] == solarSystemDust.formationDraging){
+				/*if(solarSystemDust.formedObjects[i] == solarSystemDust.formationDraging){
 					solarSystemDust.formationDraging = null;
-				}
+				}*/
 				var dragIndex = solarSystemDust.inFormationsDragging(formedObjects[i]);
 				if(dragIndex != -1){
 					solarSystemDust.removeFormationFromDrag(dragIndex);
@@ -239,11 +288,13 @@ function orbitParticle(p : ParticleSystem.Particle){
 }
 
 function transferStats(other : createSolarSystem){
+	newZoomLimits = other.newZoomLimits;
 	supernovaParticles = other.supernovaParticles;
 	supernovaDustPercent = other.supernovaDustPercent;
 	supernovae = other.supernovae;
-
+	supernovaLight = other.supernovaLight;
 	levelled = other.levelled;
+	cleaned = other.cleaned;
 	freezeTime = other.freezeTime;
 	currentFreezeTime = other.currentFreezeTime;
 	orbitSpeed = other.orbitSpeed;
@@ -267,6 +318,9 @@ function unfreeze(){
 		while(currentI < endI){
 			solarSystemDust.addDust(supernovae[currentI]);
 			currentI ++;
+			if(!tutorial2Showed && tutorialShowed){
+				setTutorial2();
+			}
 		}
 		currentFreezeTime = freezeTime;
 	}
@@ -276,4 +330,41 @@ function pulseStar(star : Transform, magnitude : float){
 	
 }
 
+function cleanOldDust(){
+	for(var j = 0;j < solarSystemDust.dust.length;j++){
+		if(solarSystemDust.dust[j]!= null){
+			var particleObject = solarSystemDust.dust[j].GetComponent(ParticleSystem);
+			var p : ParticleSystem.Particle[] = new ParticleSystem.Particle[particleObject.particleCount+1];
+			var l : int = particleObject.GetParticles(p);
+			var i = 0;
+			while(i < l){
+				p[i].lifetime = solarSystemDust.dustDeathTime;
+				i++;
+			}
+			particleObject.SetParticles(p, l);
+		}
+	}
+	cleaned = true;
+}
 
+function hasAsteroid(){
+	if(!tutorial4Showed && tutorial3Showed){
+		for(var j = 0;j < solarSystemDust.formedObjects.length;j++){
+			if(solarSystemDust.formedObjects[j].GetComponent(asteroid) != null){
+				setTutorial4();
+				return;
+			}
+		}
+	}
+}
+
+function hasStar(){
+	if(!tutorial3Showed && tutorial2Showed){
+		for(var j = 0;j < solarSystemDust.formedObjects.length;j++){
+			if(solarSystemDust.formedObjects[j].GetComponent(star) != null){
+				setTutorial3();
+				return;
+			}
+		}
+	}
+}

@@ -3,9 +3,9 @@ class dustProportion{
 	var dustAmount : int;
 	var dustMass : float;
 	
-	function dustProportion(dustType : String, dustPercent : int){
-		this.dustType = dustType;
-		this.dustAmount = dustAmount;
+	function dustProportion(newDustType : String, dustPercent : int){
+		this.dustType = newDustType;
+		this.dustAmount = dustPercent;
 	}
 	
 	function dustProportion(other : dustProportion){
@@ -14,8 +14,8 @@ class dustProportion{
 		this.dustMass = other.dustMass;
 	}
 	
-	function typeEquals(dustProportion){
-		if(dustType.Equals(dustProportion.dustType)){
+	function typeEquals(other : dustProportion){
+		if(dustType.Equals(other.dustType)){
 			return true;
 		}
 		return false;

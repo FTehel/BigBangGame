@@ -6,16 +6,23 @@ var dustTypes : dustProportion[] = new dustProportion[0];
 var massRadiusRatio : float;
 var scale : float = 0;
 var explosionParticles : Transform[] = new Transform[0];
+var dustDistance : float = 0;
+
+function restore(){
+	transform.localScale = Vector3(scale,scale,scale);
+}
 
 function grow(growRate : float){
 	var g = growRate*Time.deltaTime;
 	if(g > growAmount){
 		g = growAmount;
 	}
-	var newScale : Vector3 = Vector3(g,g,g);
-	transform.localScale += newScale;
+	scale += g;
 	growAmount-=g;
-	scale = transform.localScale.x;
+}
+
+function updateScale(){
+	transform.localScale = Vector3(scale,scale,scale);
 }
 
 function addDustType(dustType : dustProportion){
@@ -53,6 +60,7 @@ function updateFunction(){
 	if(newGrowRate != 0){
 		thisGrowRate = newGrowRate;
 	}
+	updateScale();
 }
 function inDustTypes(dustType : String){
 	for(var i = 0;i < dustTypes.length;i++){
@@ -100,6 +108,9 @@ function mergeWithDust(p : ParticleSystem.Particle, tag : String){
 		var newSize = Mathf.Pow((mass*massRadiusRatio)/(1.33*3.14),0.33)*2;
 		var newGrowAmount = newSize - transform.localScale.y;
 		growAmount += newGrowAmount;
+		if(GetComponent(asteroid) != null){
+			GetComponent(asteroid).upgrade();
+		}
 	}
 }
 
@@ -118,6 +129,7 @@ function transferStats(other : formation){
 	thisGrowRate = other.growthRate;
 	var mass = transform.GetComponent(gravityWell).mass;
 	growAmount = Mathf.Pow(mass/(1.33*3.14),0.33)*massRadiusRatio*2;
+	dustDistance = other.dustDistance;
 }
 
 function transferStats(other : formationObject){

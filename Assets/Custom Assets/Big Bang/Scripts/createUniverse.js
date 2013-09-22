@@ -170,12 +170,13 @@ function rotateCamera(){
 
 function setTutorial1(){
 	var tutorial = GetComponent(menu);
-	var str = "Click anywhere once to create a singularity";
-	tutorial.tutorialString = str;
+	var str = "In the beginning there was nothing. No time, space or energy, until a singularity appeared. " +
+	"Click anywhere once to create a singularity";
+	tutorial.setTutorial(str);
 }
 
 function setTutorial2(){
 	var tutorial = GetComponent(menu);
-	var str = "Click anywhere again to make the singularity expand";
-	tutorial.tutorialString = str;
+	var str = "The singularity rapidly expanded, creating what we now call The Big Bang. Click anywhere again to make the singularity expand.";
+	tutorial.setTutorial(str);
 }

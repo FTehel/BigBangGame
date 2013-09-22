@@ -5,20 +5,23 @@ var supernovaTime : float = 10;
 var currentSupernovaTime : float;
 
 var brightness : float = 1;
+var minBrightness : float = 0.3;
+var rangeToSize : float = 10;
+var intensityToSize : float = 1;
 
 var firstStar = true;
 
-static var currentTimer : float = 0;
-static var targetTime : float = 1;
-static var timeMagnitude : float = 1;
-static var timeIncreasing = true;
+var currentTimer : float = 0;
+var targetTime : float = 1;
+var timeMagnitude : float = 1;
+var timeIncreasing = true;
 
 var vibrateMagnitude : Vector3 = Vector3(1,0,1);
-static var currentVibrateOffset = Vector3.zero;
+var currentVibrateOffset = Vector3.zero;
 var startVibrateTime : float = 2;
 var endVibrateTime : float = 0.1;
 
-static var vibrating = false;
+var vibrating = false;
 
 function Awake(){
 	currentSupernovaTime = supernovaTime;
@@ -43,21 +46,32 @@ function transferStats(other : star){
 	currentVibrateOffset = other.currentVibrateOffset;
 	startVibrateTime = other.startVibrateTime;
 	endVibrateTime = other.endVibrateTime;
-	
 }
 
 function updateFunction(){
 	setFlareBrightness();
 	regenSupernovaTime();
+	setLightBrightness();
 	if(vibrating){
 		timer();
 	}
 	vibrate();
 }
 
+function setLightBrightness(){
+	var light = GetComponentInChildren(Light);
+	light.range = transform.localScale.x*rangeToSize;
+	light.intensity = transform.localScale.x*intensityToSize;
+}
+
 function setFlareBrightness(){
 	var flare = GetComponent(LensFlare);
-	flare.brightness = transform.localScale.x*brightness;
+	var newBright = transform.localScale.x*brightness;
+	if(newBright < minBrightness){
+		newBright = minBrightness;
+	}
+	flare.brightness = newBright;
+	
 }
 
 function reduceSupernovaTime(){

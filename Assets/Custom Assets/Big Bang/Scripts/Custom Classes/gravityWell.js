@@ -1,10 +1,13 @@
 var mass : float = 0;
 var position = Vector3.zero;
 var velocity = Vector3.zero;
+var speed : float;
 
 function Update(){
+	velocity.y = 0;
 	this.position += velocity*Time.deltaTime;
 	transform.position = getPosition();
+	speed = velocity.magnitude;
 }
 
 function transferStats(other : gravityWell){

@@ -345,3 +345,8 @@ function displayTutorial(){
 	GUI.Box(Rect(Screen.width - tutorialButtonPos.x - tutorialButtonSize.x - tutorialMenuSize.x - tutorialMenuPos.x,tutorialMenuPos.y + 
 	tutorialButtonPos.y,tutorialMenuSize.x,tutorialMenuSize.y),tutorialString);
 }
+
+function setTutorial(str : String){
+	tutorialString = str;
+	tutorialShowing = true;
+}
