@@ -41,7 +41,8 @@ function Update () {
 }
 
 function updateFunction(){
-	if(!moving && Input.touches.Length == 2){
+	var timer = Camera.main.transform.GetComponent(touchTimer);
+	if(!moving && Input.touches.Length == 2 && timer.isEnabled()){
 		moving = true;
 		getMovement();
 	}
@@ -51,6 +52,7 @@ function updateFunction(){
 	}
 	if(moving && Input.touches.Length != 2){
 		moving = false;
+		timer.disable();
 	}
 }
 
@@ -63,16 +65,16 @@ function getMovement(){
 
 function move(){
 	if(!infinite){
-		if(movement.x > 0 && transform.position.x + movement.x <= limits.maxX){
+		if(movement.x < 0 && transform.position.x - (movement.x * getSpeed()) <= limits.maxX){
 			transform.position.x -= movement.x * getSpeed();
 		}
-		if(movement.x < 0 && transform.position.x + movement.x >= limits.minX){
+		if(movement.x > 0 && transform.position.x - (movement.x * getSpeed()) >= limits.minX){
 			transform.position.x -= movement.x * getSpeed();
 		}
-		if(movement.y > 0 && transform.position.z + movement.y <= limits.maxZ){
+		if(movement.y < 0 && transform.position.z - (movement.y * getSpeed()) <= limits.maxZ){
 			transform.position.z -= movement.y * getSpeed();
 		}
-		if(movement.y < 0 && transform.position.z + movement.y >= limits.minZ){
+		if(movement.y > 0 && transform.position.z - (movement.y * getSpeed())>= limits.minZ){
 			transform.position.z -= movement.y * getSpeed();
 		}
 	}

@@ -31,11 +31,8 @@ function Awake(){
 
 function setScene(){
 	var plane : float;
-	if(GetComponent(createFirstStars) != null && GetComponent(createFirstStars).playing){
-		plane = GetComponent(createFirstStars).firstStarFormation.gravityPlane;
-	}
-	if(GetComponent(createSolarSystem) != null && GetComponent(createSolarSystem).playing){
-		plane = GetComponent(createSolarSystem).solarSystemDust.gravityPlane;
+	if(GetComponent(formationDust) != null){
+		plane = GetComponent(formationDust).gravityPlane;
 	}
 	gravityPlane = plane;
 	limits.x = plane + originalLimits.x;
@@ -44,14 +41,11 @@ function setScene(){
 	sceneSet = true;
 } 
 
-function setLimits(newLimits : Vector2){
+function setLimits(newLimits : Vector2, solarSystem : boolean){
 	var plane : float;
-	if(GetComponent(createFirstStars) != null && GetComponent(createFirstStars).playing){
-		plane = GetComponent(createFirstStars).firstStarFormation.gravityPlane;
-	}
-	if(GetComponent(createSolarSystem) != null && GetComponent(createSolarSystem).playing){
-		plane = GetComponent(createSolarSystem).solarSystemDust.gravityPlane;
-	}
+	//if(!solarSystem){
+	plane = GetComponent(formationDust).gravityPlane;
+	//}
 	originalLimits = newLimits;
 	limits.x = originalLimits.x + plane;
 	limits.y = originalLimits.y + plane;
@@ -65,10 +59,13 @@ function transferStats(other : zoomCamera){
 }
 
 function updateFunction(){
-	if(zoomInput() != 0 && Camera.main.transform.position.y >= limits.x && Camera.main.transform.position.y <= limits.y){
+	if(Time.timeScale != 0 && zoomInput() != 0){
 		var movement = cameraDirection() * zoomInput() * Time.deltaTime * sensitivity; 
 		movement = limitMovement(movement);
-		Camera.main.transform.position += movement;
+		if((movement.y > 0 && Camera.main.transform.position.y <= limits.y) ||
+		(movement.y < 0 && Camera.main.transform.position.y >= limits.x)){
+			Camera.main.transform.position += movement;
+		}
 	}
 	if(!targetFound){
 		//zoomToDistance(zoomDistance,zoomTarget);
@@ -82,7 +79,10 @@ function cameraDirection(){
 }
 
 function zoomInput(){
-	return Input.GetAxis("Mouse ScrollWheel")/Time.timeScale;
+	if(Time.timeScale != 0){
+		return (Input.GetAxis("Mouse ScrollWheel")/Time.timeScale)*(Camera.main.transform.position.y-gravityPlane);
+	}
+	return 0;
 }
 
 function limitMovement(vector : Vector3){

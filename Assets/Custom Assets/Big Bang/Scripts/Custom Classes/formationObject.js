@@ -7,6 +7,7 @@ var massRadiusRatio : float;
 var scale : float = 0;
 var explosionParticles : Transform[] = new Transform[0];
 var dustDistance : float = 0;
+var trailToSize : float = 10;
 
 function restore(){
 	transform.localScale = Vector3(scale,scale,scale);
@@ -61,6 +62,7 @@ function updateFunction(){
 		thisGrowRate = newGrowRate;
 	}
 	updateScale();
+	setTrailTime();
 }
 function inDustTypes(dustType : String){
 	for(var i = 0;i < dustTypes.length;i++){
@@ -87,6 +89,10 @@ function addDust(index : int){
 
 function addDust(index : int, amount : int){
 	dustTypes[index].dustAmount += amount;
+	transform.GetComponent(gravityWell).mass += amount*dustTypes[index].dustMass;
+	var newSize = Mathf.Pow((transform.GetComponent(gravityWell).mass*massRadiusRatio)/(1.33*3.14),0.33)*2;
+	var newGrowAmount = newSize - transform.localScale.y;
+	growAmount += newGrowAmount;
 }
 
 function getGrowthAmount(dustType : String){
@@ -121,6 +127,9 @@ function addDust(other : dustProportion){
 	}
 }
 
+function addDustMass(){
+}
+
 function transferStats(other : formation){
 	for(var i = 0;i < other.dustTypes.length;i++){
 		addDustType(other.dustTypes[i]);
@@ -130,6 +139,7 @@ function transferStats(other : formation){
 	var mass = transform.GetComponent(gravityWell).mass;
 	growAmount = Mathf.Pow(mass/(1.33*3.14),0.33)*massRadiusRatio*2;
 	dustDistance = other.dustDistance;
+	trailToSize = other.trailToSize;
 }
 
 function transferStats(other : formationObject){
@@ -160,4 +170,13 @@ function setDustAmount(type : String, mass : float){
 	var index = getDustIndex(type);
 	var amount = Mathf.RoundToInt(mass/dustTypes[index].dustMass);
 	dustTypes[index].dustAmount = amount;
+}
+
+function setDustAmount(mass : float){
+	var amount = Mathf.RoundToInt(mass/dustTypes[0].dustMass);
+	dustTypes[0].dustAmount = amount;
+}
+
+function setTrailTime(){
+	transform.GetComponent(TrailRenderer).time = trailToSize*transform.localScale.x;
 }

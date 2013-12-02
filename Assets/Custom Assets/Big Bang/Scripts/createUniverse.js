@@ -88,6 +88,7 @@ function reset(){
 	camera.transform.rotation = Quaternion.identity;
 	vScale = Vector2.zero;
 	vPosition = Vector2.zero;
+	Time.timeScale = 1;
 	setTutorial1();
 }
 

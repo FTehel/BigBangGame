@@ -18,6 +18,10 @@ var selectDistance : float = 0.03;
 var zoomDistance : float = 1;
 var collisionDistance : float = 2;
 
+var touchDown : boolean = false;
+var mouseDown : boolean = false;
+var android = false;
+
 function getDistance(){
 	var zoom = Camera.main.GetComponent(zoomCamera);
 	var height = Camera.main.transform.position.y - zoom.gravityPlane;	
@@ -34,11 +38,51 @@ function Awake () {
 }
 
 function LateUpdate () {
-	if(Input.GetMouseButtonUp(0)){
-		if(Time.time <= lastClick + doubleClickTime){
+	if(!android){
+		updateFunctionPC();
+	}
+	else{
+		updateFunctionAndroid();
+	}
+}
+
+function updateFunctionPC(){
+	if(Input.GetMouseButton(0) && !mouseDown){
+		mouseDown = true;
+		if(Time.time <= lastClick + (doubleClickTime*Time.timeScale)){
 			selectTarget();
 		}
 		lastClick = Time.time;
+	}
+	if(!Input.GetMouseButton(0)){
+		mouseDown = false;
+	}
+	if(target != null){
+		setTargetPosition(target.position);
+		if(!targetFound){
+			GetComponent(panCamera).playing = false;
+			lerpToTarget(target.position);
+		}
+	}
+	/*else{
+		setTargetPosition(centreMass());
+	}*/
+	if(targetFound){
+		GetComponent(panCamera).playing = true;
+		moveCamera();
+	}
+}
+
+function updateFunctionAndroid(){
+	if(Input.touches.Length == 1 && !touchDown){
+		touchDown = true;
+		if(Time.time <= lastClick + (doubleClickTime*Time.timeScale)){
+			selectTarget();
+		}
+		lastClick = Time.time;
+	}
+	if(Input.touches.Length == 0){
+		touchDown = false;
 	}
 	if(target != null){
 		setTargetPosition(target.position);
@@ -65,6 +109,7 @@ function transferStats(other : cameraTracking){
 	targetFoundDistance = other.targetFoundDistance;
 	zoomScaleRatio = other.zoomScaleRatio;
 	selectDistance = other.selectDistance;
+	android = other.android;
 }
 
 function moveCamera(){
@@ -90,6 +135,15 @@ function selectTarget(newTarget : Transform){
 		currentTargetLerpPos = centreScreen(newTarget.position);
 		lastTargetLerpPos = centreScreen(newTarget.position);
 		zoomDistance = newTarget.localScale.x * zoomScaleRatio;
+		if(zoomDistance <= 0){
+			zoomDistance = 0.1;
+		}
+		var targetPlanetInterface = target.GetComponent(planetInterface);
+		if(targetPlanetInterface != null){
+			if(target.GetComponent(planet).enabled){
+				targetPlanetInterface.displaying = true;
+			}
+		}
 	}
 	else{
 		deselect();
@@ -115,12 +169,26 @@ function selectTarget(dust : formationDust){
 			nearbyObjects = temp;
 		}
 	}
+	for(var l = 0;l < dust.asteroids.length;l++){
+		var distance2 = Vector3.Distance(dust.asteroids[l].position, dust.mouseGrav.position);
+		if(distance2 <=  getDistance() + (dust.asteroids[l].localScale.x/2)){
+			if(getDistance() + (dust.asteroids[l].localScale.x/2) > closestDistance){
+				closestDistance = getDistance() + (dust.asteroids[l].localScale.x/2);
+			}
+			var temp2 = new Transform [nearbyObjects.length + 1];
+			for(var m = 0;m < nearbyObjects.length;m++){
+				temp2[m] = nearbyObjects[m];
+			}
+			temp2[nearbyObjects.length] = dust.asteroids[l];
+			nearbyObjects = temp2;
+		}
+	}
 	var closestInt = -1;
 	for(var k = 0;k< nearbyObjects.length;k++){
-		var distance2 = Vector3.Distance(nearbyObjects[k].position, dust.mouseGrav.position);
-		if(distance2 < closestDistance){
+		var distance3 = Vector3.Distance(nearbyObjects[k].position, dust.mouseGrav.position);
+		if(distance3 < closestDistance){
 			closestInt = k;
-			closestDistance = distance2;
+			closestDistance = distance3;
 		}
 	}
 	if(closestInt != -1 && nearbyObjects[closestInt] != target){
@@ -132,21 +200,27 @@ function selectTarget(dust : formationDust){
 }
 
 function selectTarget(){
-	if(GetComponent(createFirstStars) != null && GetComponent(createFirstStars).playing){
-		selectTarget(GetComponent(createFirstStars).firstStarFormation);
-	}
-	if(GetComponent(createSolarSystem) != null && GetComponent(createSolarSystem).playing){
-		selectTarget(GetComponent(createSolarSystem).solarSystemDust);
+	if(GetComponent(formationDust) != null && GetComponent(formationDust).playing){
+		selectTarget(GetComponent(formationDust));
 	}
 }
 
 function deselect(){
+	if(target != null){
+		var targetPlanetInterface = target.GetComponent(planetInterface);
+		if(targetPlanetInterface != null){
+			if(target.GetComponent(planet).enabled){
+				targetPlanetInterface.displaying = false;
+			}
+		}
+	}
 	target = null;
 	currentTargetPos = targetPosition;
 	lastTargetPos = targetPosition;
 	targetFound = true;
 	var zoom = GetComponent(zoomCamera);
 	zoom.targetFound = true;
+	
 }
 
 function centreScreen(plane : Vector3){
@@ -166,14 +240,10 @@ function distance(plane : Vector3){
 }
 
 function centreMass(){
-	var firstStars = GetComponent(createFirstStars);
-	var solarSystem = GetComponent(createSolarSystem);
+	var firstStars = GetComponent(formationDust);
 	
 	if(firstStars != null && firstStars.playing){
-		return firstStars.firstStarFormation.centreMass();
-	}
-	else if(solarSystem != null && solarSystem.playing){
-		return solarSystem.solarSystemDust.centreMass();
+		return firstStars.centreMass();
 	}
 }
 

@@ -1,29 +1,15 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Custom Assets/Big Bang/Scripts/Camera/panCameraAndroid.js">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust.js">
     <Files>
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/zoomCameraAndroid.js" Line="56" Column="3" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/cameraTracking.js" Line="209" Column="43" />
-      <File FileName="Assets/Custom Assets/Interface/Scripts/menu.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/createUniverse.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/panCameraAndroid.js" Line="57" Column="10" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Rendering/resizingFlare.js" Line="1" Column="1" />
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/createSolarSystem.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/zoomCameraAndroid.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/zoomCamera.js" Line="1" Column="1" />
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/createFirstStars.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/statsHolderScript.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/GenerateSolarSystem.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formation.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationObject.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/alterTime.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/gravityWell.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/star.js" Line="1" Column="1" />
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/dustProportion.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Interface/Scripts/levelSelect.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Interface/Scripts/copyRightNotice.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/asteroid.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/objectUpgrade.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/billboard.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/staticParticles.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/dustAddition.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationObject.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formation.js" Line="1" Column="1" />
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust.js" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>

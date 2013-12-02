@@ -30,7 +30,7 @@ function startFunction () {
 	transform.GetComponent(panCamera).setStart();
 	transform.GetComponent(panCameraAndroid).setStart();
 	var ray : Ray = Camera.main.ScreenPointToRay(Vector2(Screen.width/2,Screen.height/2));
-	var planePosition = Vector3(0,transform.GetComponent(createSolarSystem).solarSystemDust.gravityPlane,0);
+	var planePosition = Vector3(0,transform.GetComponent(formationDust).gravityPlane,0);
 	var hPlane : Plane = new Plane(Vector3.up, planePosition);
 	var distance : float = 0;
 	if(hPlane.Raycast(ray, distance)){
@@ -67,13 +67,13 @@ function startFunction () {
 		var starIndex = Mathf.RoundToInt(Random.Range(0,formations.Length-1));
 		var formation = formations[starIndex].GetComponent(formation);
 		velocity *= 1-currentY;
-		transform.GetComponent(createSolarSystem).solarSystemDust.createFormation(position,formation.prefab,mass,velocity,formation,growSpeed);
+		transform.GetComponent(formationDust).createFormation(position,formation.prefab,mass,velocity,formation,growSpeed);
 	}
 	transform.GetComponent(createSolarSystem).playing = true;
 }
 
 function isTooClose(position : Vector3){
-	var formedObjects = transform.GetComponent(createSolarSystem).solarSystemDust.formedObjects;
+	var formedObjects = transform.GetComponent(formationDust).formedObjects;
 	for(var i = 0;i < formedObjects.length;i++){
 		var otherPos = formedObjects[i].GetComponent(gravityWell).position;
 		if(Vector3.Distance(otherPos,position) < minDistance){

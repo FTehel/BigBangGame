@@ -10,6 +10,37 @@ var playing = true;
 var skin : GUISkin;
 static var scrollPosition = Vector2.zero;
 
+function Start(){
+	vectorsToPercent();
+}
+
+function vectorsToPercent(){
+	menuSize = vector2ToScreenPercent(menuSize);
+	menuPos = vector2ToScreenPercent(menuPos);
+	buttonHeight = floatToHeightPercent(buttonHeight);
+	scrollWidth = floatToWidthPercent(scrollWidth);
+}
+
+function vector2ToScreenPercent(vector : Vector2){
+	var xPercent = vector.x/100;
+	var yPercent = vector.y/100;
+	var x = Mathf.RoundToInt(xPercent*Screen.width);
+	var y = Mathf.RoundToInt(yPercent*Screen.height);
+	return Vector2(x,y);
+}
+
+function floatToHeightPercent(n : float){
+	var xPercent = n/100;
+	var x = Mathf.RoundToInt(xPercent*Screen.height);
+	return x;
+}
+
+function floatToWidthPercent(n : float){
+	var xPercent = n/100;
+	var x = Mathf.RoundToInt(xPercent*Screen.width);
+	return x;
+}
+
 function OnGUI(){
 	if(playing){
 		GUI.skin = skin;
@@ -18,8 +49,9 @@ function OnGUI(){
 }
 
 function GUIFunction(){
-	menuPos.y = menuSize.y;
-	var newSize = Vector2(menuSize.x,Screen.height - (menuSize.y*2));
+	//menuPos.y = menuSize.y;
+	//var newSize = Vector2(menuSize.x,Screen.height - (menuSize.y*2));
+	var newSize = menuSize;
 	scrollPosition = GUI.BeginScrollView(Rect(menuPos.x,menuPos.y,newSize.x + scrollWidth,newSize.y),
 	scrollPosition,Rect(menuPos.x,menuPos.y,menuSize.x,buttonMargin+((buttonHeight+buttonMargin)*levelButtons.length)));
 	var buttonPos = Vector2(menuPos.x + buttonMargin,menuPos.y + buttonMargin);

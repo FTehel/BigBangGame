@@ -1,3 +1,4 @@
+
 var mass : float = 0;
 var position = Vector3.zero;
 var velocity = Vector3.zero;
@@ -26,4 +27,14 @@ function getPosition(){
 		return position;
 	}
 	return position;
+}
+
+function ToString(){
+	return "mass: " + mass + ", position: " + position + ", velocity: " + velocity;
+}
+
+function gravityWell(position : Vector3, velocity : Vector3, mass : float){
+	this.position = position;
+	this.velocity = velocity;
+	this.mass = mass;
 }

@@ -3,31 +3,11 @@ var skin : GUISkin;
 var position : Vector2 = Vector2(20,90);
 var menuButtonSize = Vector2(30,20);
 var otherButtonSize = Vector2(40,20);
-var textBoxSize = Vector2(70,20);
 var margin : float = 5;
-var labelHeight : float = 30;
-var helpButtonWidth : float = 30;
-
-var gravityStrength : float = 1;
-var distanceEffect : float = 1;
-var massEffect : float = 1;
-var mouseDrag : float = 1;
-
-static var currentGravityStrength : float = 1;
-static var currentDistanceEffect : float = 1;
-static var currentMassEffect : float = 1;
-static var currentMouseDrag : float = 1;
-
-var gravityHelpShowing = false;
-var distanceHelpShowing = false;
-var massHelpShowing = false;
-var mouseHelpShowing = false;
-
 var menuShowing = false;
+var shopShowing = false;
 var playing = false;
-
-var helpMenuSize = Vector2(300,150);
-var helpMenuPos = Vector2(100,100);
+var shopScrollPosition : Vector2 = Vector2.zero;
 
 var tutorialMenuSize = Vector2(300,150);
 var tutorialMenuPos = Vector2(450,100);
@@ -35,22 +15,75 @@ var tutorialMenuPos = Vector2(450,100);
 var tutorialButtonSize = Vector2(50,50);
 var tutorialButtonPos = Vector2(20,20);
 
+var shopMenuSize = Vector2(80,10);
+var shopMenuPosition : float = 10;
+var shopScrollBarHeight : float = 2;
+var shopButtonSize : Vector2;
+
 static var tutorialString : String;
 static var tutorialShowing = false;
+
+var shopItems : shopItem[] = new shopItem[0];
+var imageDraging : Texture;
+var isImageDraging : boolean = false;
+var itemBuying : shopItem;
+
+var lastTouchPos : Vector2;
+
+var android : boolean = false;
 
 function Start(){
 	var other = GameObject.Find("statsHolder");
 	if(other!=null){
 		transferStats(other.GetComponent(menu));
-		currentMouseDrag = mouseDrag;
-		currentMassEffect = massEffect;
-		currentDistanceEffect = distanceEffect;
-		currentGravityStrength = gravityStrength;
+	}
+	turnVectorsToPercents();
+	orderShopItems();
+}
+
+function orderShopItems(){
+	for(var i = 0;i < shopItems.length;i++){
+		for(var j = i+1;j < shopItems.length;j++){
+			if(shopItems[i].price >= shopItems[j].price){
+				var temp : shopItem = shopItems[i];
+				shopItems[i] = shopItems[j];
+				shopItems[j] = temp;
+			}
+		}
 	}
 }
 
-function Update(){
-	changeSettings();
+function vector2ToScreenPercent(vector : Vector2){
+	var xPercent = vector.x/100;
+	var yPercent = vector.y/100;
+	var x = Mathf.RoundToInt(xPercent*Screen.width);
+	var y = Mathf.RoundToInt(yPercent*Screen.height);
+	return Vector2(x,y);
+}
+
+function floatToHeightPercent(n : float){
+	var xPercent = n/100;
+	var x = Mathf.RoundToInt(xPercent*Screen.height);
+	return x;
+}
+
+function floatToWidthPercent(n : float){
+	var xPercent = n/100;
+	var x = Mathf.RoundToInt(xPercent*Screen.width);
+	return x;
+}
+
+function turnVectorsToPercents(){
+	position = vector2ToScreenPercent(position);
+	menuButtonSize = vector2ToScreenPercent(menuButtonSize);
+	otherButtonSize = vector2ToScreenPercent(otherButtonSize);
+	tutorialMenuSize = vector2ToScreenPercent(tutorialMenuSize);
+	tutorialMenuPos = vector2ToScreenPercent(tutorialMenuPos);
+	tutorialButtonSize = vector2ToScreenPercent(tutorialButtonSize);
+	tutorialButtonPos = vector2ToScreenPercent(tutorialButtonPos);
+	shopMenuSize = vector2ToScreenPercent(shopMenuSize);
+	shopScrollBarHeight = floatToHeightPercent(shopScrollBarHeight);
+	shopMenuPosition = floatToWidthPercent(shopMenuPosition);
 }
 
 function newGame(){
@@ -127,218 +160,142 @@ function GUIFunction(){
 	if(menuShowing){
 		popUpMenu();
 	}
+	if(shopShowing){
+		displayShop();
+	}
+	if(imageDraging != null){
+		///GUI.DrawTexture(Rect(60,60,50,50),imageDraging, ScaleMode.StretchToFill);
+	}
+	if(!android){
+		getImageDrag();
+	}
+	else{
+		getImageDragAndroid();
+	}
 }
 
-var gravString : String = "";
-var distanceString : String = "";
-var massString : String = "";
-var mouseDragString : String = "";
+function displayShop(){
+	var offset = 0.0;
+	var scrollLength = margin + ((shopMenuSize.y - margin) * shopItems.length);
+	var posY = Screen.height - position.y - menuButtonSize.y;
+	var start = margin;
+	var shopMenuWidth = shopMenuSize.x;
+	shopButtonSize = Vector2(shopMenuSize.y - margin - margin,shopMenuSize.y - margin - margin);
+	if(shopMenuWidth > scrollLength){
+		shopMenuWidth = scrollLength;
+	}
+	shopScrollPosition = GUI.BeginScrollView(Rect(shopMenuPosition, posY, shopMenuWidth, shopMenuSize.y + shopScrollBarHeight), shopScrollPosition,
+	Rect(0, 0, scrollLength, shopMenuSize.y),false,false);
+	
+	for(var i = 0;i < shopItems.length;i++){
+		offset = i * (shopMenuSize.y - margin);
+		if(GUI.RepeatButton(Rect(start + offset,margin,shopButtonSize.x,shopButtonSize.x), shopItems[i].texture)){
+			buyItem(shopItems[i]);
+			isImageDraging = true;
+		}
+	}
+	
+	GUI.EndScrollView();
+}
+
+function buyItem(item : shopItem){
+	//Debug.Log("Button Pressed");
+	imageDraging = item.texture;
+	itemBuying = item;
+}
+
+function dragImage(){
+	drawImage(imageDraging);
+	Time.timeScale = 0;
+}
+
+function getImageDragAndroid(){
+	/*if(!isImageDraging && Input.touches.Length == 1){
+		isImageDraging = true;
+	}*/
+	if(isImageDraging && Input.touches.Length == 1){
+		dragImage();
+		lastTouchPos = Input.touches[0].position;
+	}
+	if(isImageDraging && Input.touches.Length != 1){
+		isImageDraging = false;
+		imageDraging = null;
+		createObject(lastTouchPos);
+		GetComponent(touchTimer).disable();
+	}
+}
+
+function getImageDrag(){
+	/*if(!isImageDraging && Input.GetMouseButton(0)){
+		isImageDraging = true;
+	}*/
+	if(isImageDraging && Input.GetMouseButton(0)){
+		dragImage();
+	}
+	if(isImageDraging && !Input.GetMouseButton(0)){
+		isImageDraging = false;
+		imageDraging = null;
+		createObject(Input.mousePosition);
+	}
+}
+
+function createObject(vector : Vector2){
+	var solarSystem = Camera.main.transform.GetComponent(formationDust);
+	if(solarSystem != null && solarSystem.playing){
+		solarSystem.createFormation(vector, itemBuying.item);
+	}
+}
+
+function drawImage(image : Texture){
+	//if(image!= null){
+		//var position = Input.touches[0].position;
+		var position : Vector2 = Input.mousePosition;
+		position.x -= shopButtonSize.y/2;
+		position.y += shopButtonSize.y/2;
+		GUI.DrawTexture(Rect(position.x,Screen.height - position.y,shopButtonSize.x,shopButtonSize.x),image, ScaleMode.StretchToFill);
+	//}
+}
 
 function popUpMenu(){
-	var offset = otherButtonSize.x + margin;
+	var offset = 0.0;
 	var start = position.x + menuButtonSize.x + margin;
 	var posY = Screen.height - position.y;
-	
-	if(GUI.Button(Rect(start,posY,otherButtonSize.x,otherButtonSize.y), "New Game")){
-		newGame();
-	}
 	
 	if(GUI.Button(Rect(start + offset,posY,otherButtonSize.x,otherButtonSize.y), "Main Menu")){
 		newGame();
 	} 
 	offset += otherButtonSize.x + margin;
 	
-	
-	gravString = GUI.TextField(Rect(start + offset, posY, textBoxSize.x, textBoxSize.y), gravString,5);
-	GUI.Box(Rect(start + offset, posY-labelHeight, textBoxSize.x - helpButtonWidth, labelHeight), "Gravity Strength");
-	if(GUI.Button(Rect(start + offset+textBoxSize.x - helpButtonWidth, posY-labelHeight, helpButtonWidth, labelHeight), "?")){
-		 if(!gravityHelpShowing){
-			gravityHelpShowing = true;
+	if(GUI.Button(Rect(start + offset, posY, otherButtonSize.x,otherButtonSize.y), "Shop")){
+		if(shopShowing){
+			shopShowing = false;
 		}
 		else{
-			gravityHelpShowing = false;
+			shopShowing = true;
 		}
-		 massHelpShowing = false;
-		 distanceHelpShowing = false;
-		 mouseHelpShowing = false;
-	}
-	offset += textBoxSize.x + margin;
-	distanceString = GUI.TextField(Rect(start + offset, posY, textBoxSize.x, textBoxSize.y), distanceString,5);
-	GUI.Box(Rect(start + offset, posY-labelHeight, textBoxSize.x - helpButtonWidth, labelHeight), "Distance Effect");
-	if(GUI.Button(Rect(start + offset+textBoxSize.x - helpButtonWidth, posY-labelHeight, helpButtonWidth, labelHeight), "?")){
-		 gravityHelpShowing = false;
-		 massHelpShowing = false;
-		if(!distanceHelpShowing){
-			distanceHelpShowing = true;
-		}
-		else{
-			distanceHelpShowing = false;
-		}
-		 mouseHelpShowing = false;
-	}
-	offset += textBoxSize.x + margin;
-	massString = GUI.TextField(Rect(start + offset, posY, textBoxSize.x, textBoxSize.y), massString,5);
-	GUI.Box(Rect(start + offset, posY-labelHeight, textBoxSize.x - helpButtonWidth, labelHeight), "Mass Effect");
-	if(GUI.Button(Rect(start + offset+textBoxSize.x - helpButtonWidth, posY-labelHeight, helpButtonWidth, labelHeight), "?")){
-		gravityHelpShowing = false;
-		if(!massHelpShowing){
-			massHelpShowing = true;
-		}
-		else{
-			massHelpShowing = false;
-		}
-		distanceHelpShowing = false;
-		mouseHelpShowing = false;
-	}
-	offset += textBoxSize.x + margin;
-	mouseDragString = GUI.TextField(Rect(start + offset, posY, textBoxSize.x, textBoxSize.y), mouseDragString,5);
-	GUI.Box(Rect(start + offset, posY-labelHeight, textBoxSize.x - helpButtonWidth, labelHeight), "Drag Strength");
-	if(GUI.Button(Rect(start + offset+textBoxSize.x - helpButtonWidth, posY-labelHeight, helpButtonWidth, labelHeight), "?")){
-		if(!mouseHelpShowing){
-			mouseHelpShowing = true;
-		}
-		else{
-			mouseHelpShowing = false;
-		}
-		gravityHelpShowing = false;
-		massHelpShowing = false;
-		distanceHelpShowing = false;
-		
-	}
-	
-	var gravFloat : float;
-	var distanceFloat : float;
-	var massFloat : float;
-	var dragFloat : float;
-	
-	if(float.TryParse(gravString, gravFloat) != null && gravString != ""){
-		float.TryParse(gravString, gravFloat);
-		gravityStrength = gravFloat;
-	}
-	if(float.TryParse(distanceString, distanceFloat) != null && distanceString != ""){
-		float.TryParse(distanceString, distanceFloat);
-		distanceEffect = distanceFloat;
-	}
-	if(float.TryParse(massString, massFloat) != null && massString != ""){
-		float.TryParse(massString, massFloat); 
-		massEffect = massFloat;
-	}
-	if(float.TryParse(mouseDragString, dragFloat) != null && mouseDragString != ""){
-		float.TryParse(mouseDragString, dragFloat); 
-		mouseDrag = dragFloat;
-	}
-	
-	if(gravityHelpShowing){
-		gravityHelp();
-	}
-	if(mouseHelpShowing){
-		mouseHelp();
-	}
-	if( distanceHelpShowing){
-		distanceHelp();
-	}
-	if( massHelpShowing){
-		massHelp();
 	}
 }
 
-function changeSettings(){
-	var solarSystem = GetComponent(createSolarSystem);
-	var firstStars = GetComponent(createFirstStars);
-	if(currentDistanceEffect != distanceEffect){
-		currentDistanceEffect = distanceEffect;
-		if(solarSystem != null){
-			solarSystem.solarSystemDust.gravityDistance = distanceEffect;
-		}
-		if(firstStars != null){
-			firstStars.firstStarFormation.gravityDistance = distanceEffect;
-		}
-	}
-	if(currentMassEffect != massEffect){
-		currentMassEffect = massEffect;
-		if(solarSystem != null){
-			solarSystem.solarSystemDust.gravityMass = massEffect;
-		}
-		if(firstStars != null){
-			firstStars.firstStarFormation.gravityMass = massEffect;
-		}
-	}
-	if(currentGravityStrength != gravityStrength){
-		currentGravityStrength = gravityStrength;
-		if(solarSystem != null){
-			solarSystem.solarSystemDust.gravityStrength = gravityStrength;
-		}
-		if(firstStars != null){
-			firstStars.firstStarFormation.gravityStrength = gravityStrength;
-		}
-	}
-	if(currentMouseDrag != mouseDrag){
-		currentMouseDrag = mouseDrag;
-		if(solarSystem != null){
-			var newFormationDrag = mouseDrag;
-			var difference = newFormationDrag/solarSystem.solarSystemDust.formationDrag;
-			var newParticleDrag = solarSystem.solarSystemDust.particleDrag*difference;
-			solarSystem.solarSystemDust.formationDrag = mouseDrag;
-			solarSystem.solarSystemDust.particleDrag = newParticleDrag;
-		}
-		if(firstStars != null){
-			var newFormationDrag2 = mouseDrag;
-			var difference2 = newFormationDrag2/firstStars.firstStarFormation.formationDrag;
-			var newParticleDrag2 = firstStars.firstStarFormation.particleDrag*difference2;
-			firstStars.firstStarFormation.formationDrag = mouseDrag;
-			firstStars.firstStarFormation.particleDrag = newParticleDrag2;
-		}
-	}
-}
+
 
 function transferStats(other : menu){
+	this.shopMenuSize = other.shopMenuSize;
+	this.shopMenuPosition = other.shopMenuPosition;
+	this.shopScrollBarHeight = other.shopScrollBarHeight;
 	this.skin = other.skin;
 	this.position = other.position;
 	this.menuButtonSize = other.menuButtonSize;
 	this.otherButtonSize = other.otherButtonSize;
-	this.textBoxSize = other.textBoxSize;
 	this.margin = other.margin;
 
-	this.gravityStrength = other.gravityStrength;
-	this.distanceEffect = other.distanceEffect;
-	this.massEffect = other.massEffect;
-	this.mouseDrag = other.mouseDrag;
-	this.labelHeight = other.labelHeight;
-	
-	this.helpMenuSize = other.helpMenuSize;
-	this.helpMenuPos = other.helpMenuPos;
 	this.tutorialMenuSize = other.tutorialMenuSize;
 	this.tutorialMenuPos = other.tutorialMenuPos;
 	
 	this.tutorialButtonSize = other.tutorialButtonSize;
 	this.tutorialButtonPos = other.tutorialButtonPos;
 	this.tutorialString = other.tutorialString;
-}
-
-function helpMenu(text : String){
-	 GUI.Box(Rect(helpMenuPos.x,helpMenuPos.y, helpMenuSize.x, helpMenuSize.y), text);
-}
-
-function gravityHelp(){
-	helpMenu("Gravity Strength:\n\nGravity strength multiplies the overall effect of gravity on everything. Eg. Gravity Strength of 10" +
-	" means 10 times the strength of gravity.");
-}
-
-function distanceHelp(){
-	helpMenu("Distance Effect:\n\nDistance effect changes the effect distance has in calculating an object's gravity. Distance Effect" +
-	" is exponential. Eg. If the distance between two objects is D the distance in the calculations will be D to the power of Distance" +
-	" Effect.");
-}
-
-function massHelp(){
-	helpMenu("Mass Effect:\n\nMass Effect is a trilogy of space faring RPGs/Hot alien love simulators. It's also the effect mass has in calculating an object's "+
-	"gravity. Mass Effect is exponential. Eg. If the mass of an object is M in the calculations the mass will be M to the power of "+
-	"Mass Effect.");
-}
-
-function mouseHelp(){
-	helpMenu("Mouse Drag:\n\nMouse drag effects the mouse sensitivity when dragging an object. A low Mouse Drag will make an object lag "+
-	"behind the cursor. A high Mouse Drag will make the object stick to the cursor");
+	this.shopItems = other.shopItems;
+	this.android = other.android;
 }
 
 function displayTutorial(){

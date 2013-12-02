@@ -4,4 +4,6 @@ class objectUpgrade{
 	var thisAnimation : AnimationClip;
 	var planet = false;
 	var material : Material;
+	var rotation : Quaternion;
+	var changeRotation = false;
 }

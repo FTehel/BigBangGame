@@ -12,22 +12,76 @@ var startDustDecell : float = 10;
 var dustDecellAccell : float = 0.1;
 var dustMinSpeed : Vector2 = Vector2(0.1,0.5);
 var maxDustDistance : float = -20;
-static var sceneSetting = true;
+var sceneSetting = true;
 var cameraUnlockNumber : int = 500;
+
+var particlesToSlow : int = 150;
 
 var newEmissionRate : int = 10;
 var newStartLife : float = 400;
  
 var newSkybox : Material;
 
-var firstStarFormation : formationDust = new formationDust();
+var firstStarFormation : formationDust;
 var minDust : int = 100;
 var pullToCentre : float = 1;
+
+var android = false;
 
 static var centre : Vector3;
 static var tutorialShowed = false;
 static var tutorial2Showed = false;
 static var tutorial3Showed = false;
+
+function Start(){
+	firstStarFormation = GetComponent(formationDust);
+}
+
+function updateFunction(){
+	
+	if(sceneSetting){
+		particlesSpawned = true;
+		if(!particleSlowed()){
+			slowParticles();
+			destroyParticles();
+		}
+		if(particleSlowed()){
+			for(var j = 0;j < firstStarFormation.dust.length;j++){
+				var particleObject = firstStarFormation.dust[j].GetComponent(ParticleSystem);
+				particleObject.emissionRate = 3;
+				particleObject.startSpeed = dustMinSpeed.y;
+			}
+			sceneSetting = false;
+			firstStarFormation.mouseEnabled = true;
+			firstStarFormation.playing = true;
+			Debug.Log("sceneSetting done");
+		}
+	}
+	else{
+		destroyParticles();
+		//pullFormationsToCentre();
+		if(firstStarFormation.formedObjects.length > 0){
+			if(!tutorialShowed){
+				//setTutorial2();
+			}
+			if(!GetComponent(menu).tutorialShowing && !tutorial2Showed){
+				//setTutorial3();
+			}
+			for(var i = 0;i < firstStarFormation.dust.length;i++){
+				firstStarFormation.dust[i].GetComponent(ParticleSystem).enableEmission = false;
+			}
+		}
+		if(firstStarFormation.formedObjects.length > 1){
+			if(!GetComponent(menu).tutorialShowing && !tutorial3Showed){
+				//setTutorial4();
+			}
+		}
+		if(noParticles() && firstStarFormation.formedObjects.length > 0){
+			newGame();
+		}
+	}
+	
+}
 
 function reset(){
 	Debug.Log("Reseting create first stars");
@@ -42,8 +96,10 @@ function reset(){
 	firstStarFormation.dust = new Transform[0];
 	firstStarFormation.mouseDrag = Vector2.zero;
 	playing = false;
+	firstStarFormation.playing = false;
 	dustDecell = startDustDecell;
 	sceneSetting = true;
+	Time.timeScale = 1;
 }
 
 function setScene(){
@@ -68,7 +124,6 @@ function setScene(){
 	transform.GetComponent(alterTime).playing = true;
 	transform.GetComponent(zoomCamera).playing = true;
 	transform.GetComponent(zoomCameraAndroid).playing = true;
-	
 }
 
 function slowParticles(){
@@ -81,7 +136,7 @@ function slowParticles(){
 	    var i : int = 0;
 	    while (i < l) {
 	    	var newVelocity : Vector3 = p[i].velocity;
-	    	var toSpeed = firstStarFormation.dustVelocityMax;
+	    	var toSpeed = firstStarFormation.dustVelocityMax * 0.9;
 	    	var toVelocity = toSpeed*(p[i].velocity.normalized);
 	    	newVelocity = Vector3.Lerp(newVelocity,toVelocity, dustDecell);
 	    	p[i].velocity = newVelocity;
@@ -103,7 +158,7 @@ function particleSlowed(){
 		var p : ParticleSystem.Particle[] = new ParticleSystem.Particle[particleObject.particleCount+1];
 		var l : int = particleObject.GetParticles(p);
 	    var i : int = 0;
-	    if(l < 900){
+	    if(l < particlesToSlow){
 	    	return false;
 	    }
 	    while (i < l) {
@@ -124,56 +179,7 @@ function Update () {
 
 var particlesSpawned = false;
 
-function updateFunction(){
-	
-	if(sceneSetting){
-		if(particlesSpawned){
-			firstStarFormation.cycleThroughScene();
-		}
-		particlesSpawned = true;
-		if(!particleSlowed()){
-			slowParticles();
-			destroyParticles();
-			
-		}
-		if(particleSlowed()){
-			for(var j = 0;j < firstStarFormation.dust.length;j++){
-				var particleObject = firstStarFormation.dust[j].GetComponent(ParticleSystem);
-				particleObject.emissionRate = 10;
-				particleObject.startSpeed = dustMinSpeed.y;
-			}	
-			sceneSetting = false;
-			
-		}
-	}
-	else{
-		destroyParticles();
-		firstStarFormation.getMouseGravity();
-		//firstStarFormation.getTouchGravity();
-		firstStarFormation.cycleThroughScene();
-		pullFormationsToCentre();
-		if(firstStarFormation.formedObjects.length > 0){
-			if(!tutorialShowed){
-				setTutorial2();
-			}
-			if(!GetComponent(menu).tutorialShowing && !tutorial2Showed){
-				setTutorial3();
-			}
-			for(var i = 0;i < firstStarFormation.dust.length;i++){
-				firstStarFormation.dust[i].GetComponent(ParticleSystem).enableEmission = false;
-			}
-		}
-		if(firstStarFormation.formedObjects.length > 1){
-			if(!GetComponent(menu).tutorialShowing && !tutorial3Showed){
-				setTutorial4();
-			}
-		}
-		if(noParticles() && firstStarFormation.formedObjects.length > 0){
-			newGame();
-		}
-	}
-	
-}
+
 
 /*function createFormation(){
 	for(var i = 0;i < firstStarFormation.formations.length;i++){

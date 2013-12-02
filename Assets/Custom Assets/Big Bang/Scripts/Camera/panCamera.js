@@ -42,7 +42,9 @@ function Update () {
 }
 
 function updateFunction(){
-	transform.position += findEdge()*getSpeed()*Time.deltaTime/Time.timeScale;
+	if(Time.timeScale != 0){
+		transform.position += findEdge()*getSpeed()*Time.deltaTime/Time.timeScale;
+	}
 }
 
 function isMouseNearEdge(){

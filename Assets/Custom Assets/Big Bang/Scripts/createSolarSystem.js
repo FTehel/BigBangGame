@@ -1,5 +1,5 @@
 var playing = false;
-var solarSystemDust : formationDust = new formationDust();
+//var solarSystemDust : formationDust = new formationDust();
 var supernovaParticles : Transform[] = new Transform[0];
 var supernovaDustPercent : float;
 var supernovae : Transform[] = new Transform[0];
@@ -13,6 +13,8 @@ var supernovaSpeedToMass2 : float = 1;
 var maxOrbitCount = 25;
 var supernovaLight : Transform;
 var newZoomLimits = Vector2(5,100);
+var android = false;
+var statsGot = false;
 
 static var orbitCount : float = 0;
 
@@ -23,32 +25,83 @@ static var tutorial2Showed = false;
 static var tutorial3Showed = false;
 static var tutorial4Showed = false;
 
-function Update () {
-	if(playing){
-		updateFunction();
+function Start(){
+	if(!statsGot){
+		getStats();
 	}
+	//getStats();
+}
+
+function getStats(){
+	playing = true;
+	var stats = GameObject.Find("statsHolder");
+	if(stats != null){
+		transferStats(stats.GetComponent(createSolarSystem));
+		GetComponent(formationDust).transferStats(stats.GetComponent(formationDust),true);
+		GetComponent(formationDust).playing = true;
+		GetComponent(formationDust).mouseEnabled = true;
+		GetComponent(formationDust).limitGravity = false;
+	}
+	//setTutorial1();
+	if(playing){
+		GetComponent(zoomCamera).setLimits(newZoomLimits, true);
+		GetComponent(zoomCameraAndroid).setLimits(newZoomLimits, true);
+	}
+}
+
+function transferStats(other : createSolarSystem){
+	newZoomLimits = other.newZoomLimits;
+	supernovaParticles = other.supernovaParticles;
+	supernovaDustPercent = other.supernovaDustPercent;
+	supernovae = other.supernovae;
+	supernovaLight = other.supernovaLight;
+	levelled = other.levelled;
+	cleaned = other.cleaned;
+	freezeTime = other.freezeTime;
+	currentFreezeTime = other.currentFreezeTime;
+	orbitSpeed = other.orbitSpeed;
+	supernovaSpeedToMass1 = other.supernovaSpeedToMass1;
+	supernovaSpeedToMass2 = other.supernovaSpeedToMass2;
+	maxOrbitCount = other.maxOrbitCount;
+	android = other.android;
 }
 
 function reset(){
 	Debug.Log("Reseting create solar system");
 	transform.GetComponent(panCamera).setStart();
 	transform.GetComponent(panCameraAndroid).setStart();
-	for(var j = 0;j < solarSystemDust.formedObjects.length;j++){
-		Destroy(solarSystemDust.formedObjects[j].gameObject);
+	Time.timeScale = 1;
+	for(var j = 0;j < GetComponent(formationDust).formedObjects.length;j++){
+		Destroy(GetComponent(formationDust).formedObjects[j].gameObject);
 	}
 	getStats();
-	for(var i = 0;i < solarSystemDust.formedObjects.length;i++){
-		Instantiate(solarSystemDust.formedObjects[i],solarSystemDust.formedObjects[i].position,Quaternion.identity);
+	for(var i = 0;i < GetComponent(formationDust).formedObjects.length;i++){
+		Instantiate(GetComponent(formationDust).formedObjects[i],GetComponent(formationDust).formedObjects[i].position,Quaternion.identity);
 	}
-	
 }
 
 function setScene(stats : formationDust){
-	solarSystemDust.transferStats(stats);
-	GetComponent(zoomCamera).setLimits(newZoomLimits);
-	GetComponent(zoomCameraAndroid).setLimits(newZoomLimits);
+	GetComponent(zoomCamera).setLimits(newZoomLimits, true);
+	GetComponent(zoomCameraAndroid).setLimits(newZoomLimits, true);
+	GetComponent(formationDust).transferStats(stats, false);
+	//setTutorial1();
+	//getStats();
+}
+
+/*function Update () {
+	if(playing){
+		updateFunction();
+	}
+}
+
+
+
+function setScene(stats : formationDust){
+	GetComponent(zoomCamera).setLimits(newZoomLimits, true);
+	GetComponent(zoomCameraAndroid).setLimits(newZoomLimits, true);
 	setTutorial1();
-	getStats();
+	//getStats();
+	solarSystemDust.transferStats(stats);
 }
 
 function Start(){
@@ -59,25 +112,28 @@ function Start(){
 function getStats(){
 	var stats = GameObject.Find("statsHolder");
 	if(stats != null){
-		transferStats(stats.GetComponent(createSolarSystem));
-		solarSystemDust.transferStats(stats.GetComponent(statsHolderScript).stats,true);
+		//transferStats(stats.GetComponent(formationDust));
+		GetComponent(formationDust).transferStats(stats.GetComponent(formationDust),true);
 	}
 	setTutorial1();
 	if(playing){
-		GetComponent(zoomCamera).setLimits(newZoomLimits);
-		GetComponent(zoomCameraAndroid).setLimits(newZoomLimits);
+		GetComponent(zoomCamera).setLimits(newZoomLimits, true);
+		GetComponent(zoomCameraAndroid).setLimits(newZoomLimits, true);
 	}
 }
 
 function updateFunction(){
-	solarSystemDust.cycleThroughParticles();
-	solarSystemDust.cycleThroughFormations();
-	solarSystemDust.getMouseGravity();
-	//solarSystemDust.getTouchGravity();
-	supernovaStar();
-	countDownFreezeTime();
+	solarSystemDust.cycleThroughScene();
+	if(!android){
+		solarSystemDust.getMouseGravity();
+	}
+	else{
+		solarSystemDust.getTouchGravity();
+	}
+	//supernovaStar();
+	/*countDownFreezeTime();
 	unfreeze();
-	cycleThroughSupernovae();
+	//cycleThroughSupernovae();
 	hasStar();
 	hasAsteroid();
 }
@@ -101,7 +157,7 @@ function updateFunction(){
 	solarSystemDust.formedObjects[length-1].GetComponent(formationObject).newGrowRate = speed;
 	
 	solarSystemDust.formedObjects[length-1].GetComponent(gravityWell).position = thisPos;
-}*/
+}
 
 function setTutorial1(){
 	var tutorial = GetComponent(menu);
@@ -141,7 +197,7 @@ function supernovaStar(){
 		var star = formedObjects[i].GetComponent(star);
 		if(star!= null && star.firstStar){
 			var gravWell = formedObjects[i].GetComponent(gravityWell);
-			var mouseGrav = solarSystemDust.mouseGrav;
+			var mouseGrav : gravityWell = solarSystemDust.mouseGrav;
 			if(solarSystemDust.mouseGravExists && Vector3.Distance(mouseGrav.position,gravWell.position) <= formedObjects[i].localScale.x/2){
 				star.reduceSupernovaTime();
 				if(star.currentSupernovaTime == 0){
@@ -180,7 +236,7 @@ function supernovaStar(){
 					}
 					UnityEngine.Object.Destroy(formedObjects[i].gameObject);
 					solarSystemDust.formedObjectsRemove(i);
-					cleanOldDust();
+					//cleanOldDust();
 				}
 			}
 		}
@@ -244,7 +300,6 @@ function ruptureFormation(p : ParticleSystem.Particle){
 					var pNumber = 0;
 					var SNDust = UnityEngine.Object.Instantiate(supernovaParticles[j],formedObjects[i].position, Quaternion.identity);
 					var particleObject = SNDust.GetComponent(ParticleSystem);
-					Debug.Log(particleObject);
 					for(var k = 0;k < fObject.dustTypes.length;k++){
 						pNumber += fObject.dustTypes[k].dustAmount;
 					}
@@ -266,13 +321,14 @@ function ruptureFormation(p : ParticleSystem.Particle){
 				}
 				/*if(solarSystemDust.formedObjects[i] == solarSystemDust.formationDraging){
 					solarSystemDust.formationDraging = null;
-				}*/
+				}
 				var dragIndex = solarSystemDust.inFormationsDragging(formedObjects[i]);
 				if(dragIndex != -1){
 					solarSystemDust.removeFormationFromDrag(dragIndex);
 				}
 				UnityEngine.Object.Destroy(formedObjects[i].gameObject);
 				solarSystemDust.formedObjectsRemove(i);
+				i = formedObjects.length;
 			}
 		}
 	}
@@ -285,22 +341,6 @@ function orbitParticle(p : ParticleSystem.Particle){
 	var newVelocity = p.velocity + (newDirection * orbitSpeed * Time.deltaTime);
 	newVelocity.y = 0;
 	return newVelocity;
-}
-
-function transferStats(other : createSolarSystem){
-	newZoomLimits = other.newZoomLimits;
-	supernovaParticles = other.supernovaParticles;
-	supernovaDustPercent = other.supernovaDustPercent;
-	supernovae = other.supernovae;
-	supernovaLight = other.supernovaLight;
-	levelled = other.levelled;
-	cleaned = other.cleaned;
-	freezeTime = other.freezeTime;
-	currentFreezeTime = other.currentFreezeTime;
-	orbitSpeed = other.orbitSpeed;
-	supernovaSpeedToMass1 = other.supernovaSpeedToMass1;
-	supernovaSpeedToMass2 = other.supernovaSpeedToMass2;
-	maxOrbitCount = other.maxOrbitCount;
 }
 
 function countDownFreezeTime(){
@@ -367,4 +407,4 @@ function hasStar(){
 			}
 		}
 	}
-}
+}*/

@@ -6,6 +6,7 @@ var currentSupernovaTime : float;
 
 var brightness : float = 1;
 var minBrightness : float = 0.3;
+var maxIntensity : float = 2;
 var rangeToSize : float = 10;
 var intensityToSize : float = 1;
 
@@ -22,6 +23,8 @@ var startVibrateTime : float = 2;
 var endVibrateTime : float = 0.1;
 
 var vibrating = false;
+var supernovaParticles : Transform[] = new Transform[0];
+var supernovaDustPercent : float;
 
 function Awake(){
 	currentSupernovaTime = supernovaTime;
@@ -61,7 +64,11 @@ function updateFunction(){
 function setLightBrightness(){
 	var light = GetComponentInChildren(Light);
 	light.range = transform.localScale.x*rangeToSize;
-	light.intensity = transform.localScale.x*intensityToSize;
+	var intensity : float = transform.localScale.x*intensityToSize;
+	if(intensity > maxIntensity){
+		intensity = maxIntensity;
+	}
+	light.intensity = intensity;
 }
 
 function setFlareBrightness(){
@@ -70,13 +77,15 @@ function setFlareBrightness(){
 	if(newBright < minBrightness){
 		newBright = minBrightness;
 	}
-	flare.brightness = newBright;
+	//flare.brightness = newBright;
 	
 }
 
 function reduceSupernovaTime(){
 	if(firstStar){
-		currentSupernovaTime -= (regenSpeed + supernovaDecrease)*Time.deltaTime;
+		if(Time.timeScale != 0){
+			currentSupernovaTime -= (regenSpeed + supernovaDecrease)*Time.deltaTime/Time.timeScale;
+		}
 		if(currentSupernovaTime < 0){
 			currentSupernovaTime = 0;
 		}
@@ -85,8 +94,8 @@ function reduceSupernovaTime(){
 
 function regenSupernovaTime(){
 	if(firstStar){
-		if(currentSupernovaTime < supernovaTime){
-			currentSupernovaTime += regenSpeed * Time.deltaTime;
+		if(currentSupernovaTime < supernovaTime && Time.timeScale != 0){
+			currentSupernovaTime += regenSpeed * Time.deltaTime/Time.timeScale;
 		}
 		if(currentSupernovaTime > supernovaTime){
 			currentSupernovaTime = supernovaTime;
@@ -95,11 +104,13 @@ function regenSupernovaTime(){
 }
 
 function changeTimer(){
-	if(timeIncreasing){
-		currentTimer += Time.deltaTime;
-	}
-	else{
-		currentTimer -= Time.deltaTime;
+	if(Time.timeScale != 0){
+		if(timeIncreasing){
+			currentTimer += Time.deltaTime/Time.timeScale;
+		}
+		else{
+			currentTimer -= Time.deltaTime/Time.timeScale;
+		}
 	}
 }
 
@@ -184,3 +195,4 @@ function restoreVibrate(){
 		currentVibrateOffset = (vibrateMagnitude*transform.localScale.x)*timePercent();
 	}
 }
+

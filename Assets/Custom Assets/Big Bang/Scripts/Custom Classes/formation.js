@@ -9,6 +9,8 @@
 	var startMass : float;
 	var growthRate : float;
 	static var startRadius : float;
+	var asteroid : asteroidFormation[];
+	var trailToSize : float = 10;
 	
 /*	function formation(name : String, minDust : int, prefab : Transform, maxGrav : float, dustTypes : dustProportion[]){
 		this.name = name;
@@ -18,6 +20,13 @@
 		this.dustTypes = dustTypes;
 	}*/
 	
+	function awake(){
+		if(asteroid.length > 0){
+			for(j in dustTypes){
+				j.dustAmount /= asteroid[0].number;
+			}
+		}
+	}
 	
 	function addDustType(dustType : String, dustPercentage : int){
 		var temp : dustProportion[] = new dustProportion[dustTypes.length + 1];
@@ -113,14 +122,16 @@
 	
 	function hasAllDust(types : Transform[]){
 		for(var j = 0;j < dustTypes.length;j++){
-			var found = false;
-			for(var i = 0;i < types.length;i++){
-				if(types[i].tag == dustTypes[j].dustType){
-					found = true;
+			if(dustTypes[j].dustAmount != 0){
+				var found = false;
+				for(var i = 0;i < types.length;i++){
+					if(types[i].tag == dustTypes[j].dustType){
+						found = true;
+					}
 				}
-			}
-			if(!found){
-				return false;
+				if(!found){
+					return false;
+				}
 			}
 		}
 		return true;

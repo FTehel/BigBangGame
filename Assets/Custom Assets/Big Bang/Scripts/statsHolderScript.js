@@ -2,7 +2,7 @@
 Fraser Tehel 2013
 */
 
-var stats : formationDust = new formationDust();
+//var stats : formationDust = new formationDust();
 
 function Awake () {
 	findStats();
@@ -11,9 +11,9 @@ function Awake () {
 
 function findStats(){
 	var main = Camera.main;
-	if(main.GetComponent(createFirstStars) != null){
-		var other = main.GetComponent(createFirstStars);
-		stats.transferStats(other.firstStarFormation);
+	if(main.GetComponent(formationDust) != null){
+		var other = main.GetComponent(formationDust);
+		GetComponent(formationDust).transferStats(other);
 	}
 	if(main.GetComponent(alterTime) != null){
 		var other2 = main.GetComponent(alterTime);
@@ -22,10 +22,6 @@ function findStats(){
 	if(main.GetComponent(menu) != null){
 		var other3 = main.GetComponent(menu);
 		GetComponent(menu).transferStats(other3);
-	}
-	if(main.GetComponent(createSolarSystem) != null){
-		var other4 = main.GetComponent(createSolarSystem);
-		GetComponent(createSolarSystem).transferStats(other4);
 	}
 	if(main.GetComponent(zoomCamera) != null){
 		var other5 = main.GetComponent(zoomCamera);
@@ -46,5 +42,13 @@ function findStats(){
 	if(main.GetComponent(panCameraAndroid) != null){
 		var other9 = main.GetComponent(panCameraAndroid);
 		GetComponent(panCameraAndroid).transferStats(other9);
+	}
+	if(main.GetComponent(touchTimer) != null){
+		var other10 = main.GetComponent(touchTimer);
+		GetComponent(touchTimer).transferStats(other10);
+	}
+	if(main.GetComponent(createSolarSystem) != null){
+		var other11 = main.GetComponent(createSolarSystem);
+		GetComponent(createSolarSystem).transferStats(other11);
 	}
 }

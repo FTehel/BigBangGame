@@ -15,6 +15,7 @@ var targetZoomSpeed : float;
 var pinchSpeed : float;
 var currentPinch : float;
 var lastPinch : float;
+var plane : float;
 
 var zooming : boolean = false;
 
@@ -37,7 +38,8 @@ function setPinchSpeed(){
 }
 
 function setPinch(){
-	if(!zooming && Input.touches.Length == 2){
+	var timer = Camera.main.transform.GetComponent(touchTimer);
+	if(!zooming && Input.touches.Length == 2 && timer.isEnabled()){
 		zooming = true;
 		setPinchSpeed();
 	}
@@ -46,6 +48,7 @@ function setPinch(){
 	}
 	if(zooming && Input.touches.Length != 2){
 		zooming = false;
+		timer.disable();
 	}
 }
 
@@ -58,12 +61,9 @@ function Awake(){
 }
 
 function setScene(){
-	var plane : float;
-	if(GetComponent(createFirstStars) != null && GetComponent(createFirstStars).playing){
-		plane = GetComponent(createFirstStars).firstStarFormation.gravityPlane;
-	}
-	if(GetComponent(createSolarSystem) != null && GetComponent(createSolarSystem).playing){
-		plane = GetComponent(createSolarSystem).solarSystemDust.gravityPlane;
+	var plane : float = 0;
+	if(GetComponent(formationDust) != null){
+		plane = GetComponent(formationDust).gravityPlane;
 	}
 	gravityPlane = plane;
 	limits.x = plane + originalLimits.x;
@@ -72,14 +72,11 @@ function setScene(){
 	sceneSet = true;
 } 
 
-function setLimits(newLimits : Vector2){
+function setLimits(newLimits : Vector2, solarSystem : boolean){
 	var plane : float;
-	if(GetComponent(createFirstStars) != null && GetComponent(createFirstStars).playing){
-		plane = GetComponent(createFirstStars).firstStarFormation.gravityPlane;
-	}
-	if(GetComponent(createSolarSystem) != null && GetComponent(createSolarSystem).playing){
-		plane = GetComponent(createSolarSystem).solarSystemDust.gravityPlane;
-	}
+	//if(!solarSystem){
+		plane = GetComponent(formationDust).gravityPlane;
+	//}
 	originalLimits = newLimits;
 	limits.x = originalLimits.x + plane;
 	limits.y = originalLimits.y + plane;
@@ -95,7 +92,7 @@ function transferStats(other : zoomCameraAndroid){
 function updateFunction(){
 	setPinch();
 	if(zooming && Camera.main.transform.position.y >= limits.x && Camera.main.transform.position.y <= limits.y){
-		var movement = cameraDirection() * zoomInput() * Time.deltaTime * sensitivity; 
+		var movement = cameraDirection() * zoomInput() * sensitivity; 
 		movement = limitMovement(movement);
 		Camera.main.transform.position += movement;
 	}
@@ -106,8 +103,17 @@ function updateFunction(){
 
 function cameraDirection(){
 	var cam : Transform = Camera.main.transform;
-	var cameraFront : Vector3 = cam.TransformDirection (Vector3.forward);
-	return cameraFront.normalized;
+	var touchCentre : Vector2 = (Input.touches[0].position + Input.touches[1].position)/2;
+	var ray : Ray = Camera.main.ScreenPointToRay(touchCentre);
+	var planePosition = Vector3(0,gravityPlane,0);
+	var hPlane : Plane = new Plane(Vector3.up, planePosition);
+	var distance : float = 0;
+	var target : Vector3;
+	if(hPlane.Raycast(ray, distance)){
+	    target = ray.GetPoint(distance);
+	}
+	var direction = target - transform.position;
+	return direction.normalized;
 }
 
 function zoomInput(){
@@ -119,12 +125,12 @@ function limitMovement(vector : Vector3){
 	var newY = transform.position.y + vector.y;
 	var percent : float = 1;
 	var distance : float;
-	if(newY < limits.x){
+	if(vector.y < 0 && newY < limits.x){
 		distance = transform.position.y - limits.x;
 		percent = Mathf.Abs(distance/vector.y);
 		targetFound = true;
 	}
-	if(newY > limits.y){
+	if(vector.y > 0 && newY > limits.y){
 		distance = transform.position.y - limits.y;
 		percent = Mathf.Abs(distance/vector.y);
 		targetFound = true;
