@@ -1,6 +1,6 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust.js">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Custom Assets/Big Bang/Scripts/alterTime.js">
     <Files>
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/Rendering/resizingFlare.js" Line="1" Column="1" />
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/createSolarSystem.js" Line="1" Column="1" />
@@ -10,7 +10,10 @@
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/dustProportion.js" Line="1" Column="1" />
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationObject.js" Line="1" Column="1" />
       <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formation.js" Line="1" Column="1" />
-      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust.js" Line="20" Column="28" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust1.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/cameraTracking.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/alterTime.js" Line="38" Column="47" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

@@ -18,6 +18,7 @@ var positiveToNegative : float = 10;
 
 function Update () {
 	if(playing){
+		var lastScale = Time.timeScale;
 		positivePower = Mathf.Log(maxScale)/Mathf.Log(max);
 		negativePower = Mathf.Log(minScale)/Mathf.Log(min);
 		var newScale : float = sliderScale;
@@ -32,6 +33,9 @@ function Update () {
 		}
 		if(newScale < 0.01){
 			newScale = 0.01;
+		}
+		if(newScale != lastScale){
+			GetComponent(cameraTracking).lastClick = 0;
 		}
 		Time.timeScale = newScale;
 	}

@@ -1,0 +1,86 @@
+-target:library
+-i:UnityEngine
+-i:System.Collections
+-base:UnityEngine.MonoBehaviour
+-nowarn:BCW0016
+-nowarn:BCW0003
+-method:Main
+-out:Temp/Assembly-UnityScript.dll
+-x-type-inference-rule-attribute:UnityEngineInternal.TypeInferenceRuleAttribute
+-debug
+-pragmas:strict,downcast
+-define:UNITY_ANDROID
+-define:ENABLE_MICROPHONE
+-define:ENABLE_TEXTUREID_MAP
+-define:ENABLE_AUDIO_FMOD
+-define:ENABLE_MONO
+-define:ENABLE_SPRITES
+-define:ENABLE_TERRAIN
+-define:ENABLE_GENERICS
+-define:ENABLE_SUBSTANCE
+-define:INCLUDE_WP8SUPPORT
+-define:ENABLE_WWW
+-define:ENABLE_IMAGEEFFECTS
+-define:ENABLE_WEBCAM
+-define:INCLUDE_METROSUPPORT
+-define:RENDER_SOFTWARE_CURSOR
+-define:ENABLE_NETWORK
+-define:ENABLE_PHYSICS
+-define:ENABLE_CACHING
+-define:ENABLE_CLOTH
+-define:UNITY_ANDROID_API
+-define:ENABLE_2D_PHYSICS
+-define:ENABLE_SHADOWS
+-define:ENABLE_AUDIO
+-define:ENABLE_NAVMESH_CARVING
+-define:ENABLE_SINGLE_INSTANCE_BUILD_SETTING
+-define:UNITY_4_3_1
+-define:UNITY_4_3
+-define:ENABLE_PROFILER
+-define:UNITY_EDITOR
+-define:UNITY_EDITOR_OSX
+-r:'/Applications/Unity/Unity.app/Contents/Frameworks/Managed/UnityEngine.dll'
+-r:'Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll'
+-r:'Library/ScriptAssemblies/Assembly-UnityScript-firstpass.dll'
+-r:'/Applications/Unity/Unity.app/Contents/Frameworks/Managed/UnityEditor.dll'
+-i:UnityEditor
+'Assets/Custom Assets/Big Bang/Scripts/Camera/cameraTracking.js'
+'Assets/Custom Assets/Big Bang/Scripts/Camera/panCamera.js'
+'Assets/Custom Assets/Big Bang/Scripts/Camera/panCameraAndroid.js'
+'Assets/Custom Assets/Big Bang/Scripts/Camera/zoomCamera.js'
+'Assets/Custom Assets/Big Bang/Scripts/Camera/zoomCameraAndroid.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/asteroid.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/asteroidFormation.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/dustAddition.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/dustProportion.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formation.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust1.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationObject.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/gravityWell.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/objectDestroyer.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/objectUpgrade.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/planet.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/planetTexture.js'
+'Assets/Custom Assets/Big Bang/Scripts/Custom Classes/star.js'
+'Assets/Custom Assets/Big Bang/Scripts/GenerateSolarSystem.js'
+'Assets/Custom Assets/Big Bang/Scripts/Rendering/flareLayer.js'
+'Assets/Custom Assets/Big Bang/Scripts/Rendering/resizingFlare.js'
+'Assets/Custom Assets/Big Bang/Scripts/alterTime.js'
+'Assets/Custom Assets/Big Bang/Scripts/billboard.js'
+'Assets/Custom Assets/Big Bang/Scripts/createFirstStars.js'
+'Assets/Custom Assets/Big Bang/Scripts/createSolarSystem.js'
+'Assets/Custom Assets/Big Bang/Scripts/createSpace.js'
+'Assets/Custom Assets/Big Bang/Scripts/createUniverse.js'
+'Assets/Custom Assets/Big Bang/Scripts/staticParticles.js'
+'Assets/Custom Assets/Big Bang/Scripts/statsHolderScript.js'
+'Assets/Custom Assets/Big Bang/Scripts/touchTimer.js'
+'Assets/Custom Assets/Interface/Scripts/copyRightNotice.js'
+'Assets/Custom Assets/Interface/Scripts/createObjectMenu.js'
+'Assets/Custom Assets/Interface/Scripts/levelButton.js'
+'Assets/Custom Assets/Interface/Scripts/levelSelect.js'
+'Assets/Custom Assets/Interface/Scripts/menu.js'
+'Assets/Custom Assets/Interface/Scripts/menu2.js'
+'Assets/Custom Assets/Interface/Scripts/planetInterface.js'
+'Assets/Custom Assets/Interface/Scripts/shopItem.js'
+'Assets/Custom Assets/Interface/Scripts/shopMenu.js'

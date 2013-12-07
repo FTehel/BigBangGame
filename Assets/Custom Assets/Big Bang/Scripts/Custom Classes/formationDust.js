@@ -1719,6 +1719,9 @@ function explodeAntiMatter(antiMatter : Transform, other : Transform){
 		other.GetComponent(gravityWell).position+=Vector3(maxFormationDistance*3,0,0);
 		antiMatter.position+=Vector3(maxFormationDistance*3,0,0);
 		other.position+=Vector3(maxFormationDistance*3,0,0);
+		if(GetComponent(cameraTracking).target == antiMatter){
+			GetComponent(cameraTracking).deselect();
+		}
 	}
 	else{
 		supernovaStar(other);
@@ -1760,6 +1763,9 @@ function supernovaStar(star2 : Transform){
 		//UnityEngine.Object.Destroy(star2.gameObject);
 		star2.position+=Vector3(maxFormationDistance*3,0,0);
 		star2.GetComponent(gravityWell).position+=Vector3(maxFormationDistance*3,0,0);
+		if(GetComponent(cameraTracking).target == star2){
+			GetComponent(cameraTracking).deselect();
+		}
 	}
 }
 
