@@ -98,6 +98,7 @@ var dragEnabled = false;
 
 var timer : float = 0.1;
 var startTimer;
+var dragShips = false;
 
 function Update(){
 	updateFunction();
@@ -1182,7 +1183,7 @@ function cycleThroughFormations(){
 			if(mouseGravExists){
 				addFormationToDrag(formedObjects[i],formedObjects[i].localScale.x/2);
 				selectFormationToDrag();
-				if(dragEnabled && formationDraging == formedObjects[i]){
+				if(!dragShips && dragEnabled && formationDraging == formedObjects[i]){
 					formedObjects[i].GetComponent(gravityWell).velocity = dragFormationGroup(formedObjects[i]);
 				}
 				/*if(formationDraging != formedObjects[i] && inFormationsDragging(formedObjects[i]) && 
@@ -1235,7 +1236,7 @@ function cycleThroughAsteroids(){
 				/*if(formationDraging == asteroids[i]){
 					asteroids[i].GetComponent(gravityWell).velocity = dragFormationGroup(asteroids[i]);
 				}*/
-				if(inFormationsDragging(asteroids[i])/* && 
+				if(!dragShips && inFormationsDragging(asteroids[i])/* && 
 				asteroids[i].localScale.x <= maxGroupDragSize*/){
 					asteroids[i].GetComponent(gravityWell).velocity = dragFormationGroup(asteroids[i]);
 				}
@@ -1420,6 +1421,15 @@ function getPerfectOrbitSpeed(well : gravityWell , other : gravityWell){
 	return x;
 }
 
+function getPerfectOrbitSpeed(well : Vector3 , other : gravityWell){
+	var massPow = Mathf.Pow(other.mass,gravityMass);
+	//var thisPow = Mathf.Pow(well.mass,gravityMass);
+	var distance = Vector3.Distance(well,other.position);
+	var distancePow = distance*gravityDistance;
+	var x = Mathf.Sqrt((gravityStrength * (massPow))/distancePow);
+	return x;
+}
+
 /*function getPerfectOrbitSpeed(well : gravityWell , other : gravityWell){
 	var massPow = Mathf.Pow(other.mass,gravityMass);
 	var thisPow = Mathf.Pow(well.mass,gravityMass);
@@ -1452,9 +1462,23 @@ function getPerfectOrbitVelocity(well : gravityWell , other : gravityWell){
 	return ((right * getPerfectOrbitSpeed(well , other)) + other.velocity);
 }
 
+function getPerfectOrbitVelocity2(pos : Vector3, other : gravityWell){
+	var angle = other.position - pos;
+	angle = angle.normalized;
+	var right = Vector3(angle.z,angle.y,-angle.x);
+	return ((right * getPerfectOrbitSpeed(pos , other)) + other.velocity);
+}
+
 function getStartPerfectVelocity(well : gravityWell){
 	var other = getStrongestPull(well.position);
 	var v = getPerfectOrbitVelocity(well , other);
+	//v += getGravity(well.position, other.position, well.mass, other.mass)*Time.deltaTime;
+	return v;
+}
+
+function getStartPerfectVelocity(position : Vector3){
+	var other = getStrongestPull(position);
+	var v = getPerfectOrbitVelocity2(position , other);
 	//v += getGravity(well.position, other.position, well.mass, other.mass)*Time.deltaTime;
 	return v;
 }
@@ -1529,7 +1553,7 @@ function dragFormationGroup(f : Transform){
 			//var percent = 1;
 			if(Time.timeScale != 0 && Time.deltaTime != 0){
 				//Debug.Log(4.1 + " " + movement + " " + Time.deltaTime);
-				movement = Vector3.Lerp(movement,getMouseDrag(1)/Time.deltaTime,(getDragEffect(f.GetComponent(gravityWell).mass)*percent)/Time.timeScale);
+				movement = Vector3.Lerp(movement,getMouseDrag(percent)/Time.deltaTime,(getDragEffect(f.GetComponent(gravityWell).mass)*percent)/Time.timeScale);
 				//Debug.Log(4 + " " + movement + " " + Time.deltaTime);
 			}
 			var asteroid = f.GetComponent(asteroid);

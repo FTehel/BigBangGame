@@ -46,6 +46,15 @@ function GUIfunction(){
 	if(GUI.Button(Rect(pos.x + ((size.x/2)-(buttonSize.x/2)),pos.y + buttonPos + (buttonSize.y*2),buttonSize.x,buttonSize.y),"Ice")){
 		GetComponent(planet).freeze();
 	}
+	if(GUI.Button(Rect(pos.x + ((size.x/2)-(buttonSize.x/2)),pos.y + buttonPos + (buttonSize.y*3),buttonSize.x,buttonSize.y),"Create Ship")){
+		createShip();
+	}
+}
+
+function createShip(){
+	var createPos = Vector3(0,0,-transform.localScale.x);
+	createPos += transform.position;
+	Camera.main.transform.GetComponent(shipsHolder).createShip(createPos);
 }
 
 function OnGUI(){

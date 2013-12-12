@@ -41,6 +41,7 @@ function getStats(){
 		GetComponent(formationDust).playing = true;
 		GetComponent(formationDust).mouseEnabled = true;
 		GetComponent(formationDust).limitGravity = false;
+		GetComponent(shipsHolder).transferStats(stats.GetComponent(shipsHolder));
 	}
 	//setTutorial1();
 	if(playing){

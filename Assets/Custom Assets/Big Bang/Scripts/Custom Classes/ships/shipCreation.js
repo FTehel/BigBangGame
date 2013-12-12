@@ -1,9 +1,2 @@
-﻿#pragma strict
-
-function Start () {
-
-}
-
-function Update () {
-
-}
+﻿var prefab : Transform;
+var level : int = 1;

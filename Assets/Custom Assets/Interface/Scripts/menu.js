@@ -172,6 +172,7 @@ function GUIFunction(){
 	else{
 		getImageDragAndroid();
 	}
+	dragShipsButton();
 }
 
 function displayShop(){
@@ -306,4 +307,20 @@ function displayTutorial(){
 function setTutorial(str : String){
 	tutorialString = str;
 	tutorialShowing = true;
+}
+
+function dragShipsButton(){
+	var dust = GetComponent(formationDust);
+	var y = Screen.height - position.y;
+	var x = Screen.width - position.x;
+	if(dust.dragShips){
+		if(GUI.Button(Rect(x,y,otherButtonSize.x,otherButtonSize.y), "Ships")){
+			dust.dragShips = false;
+		}
+	}
+	else{
+		if(GUI.Button(Rect(x,y,otherButtonSize.x,otherButtonSize.y), "Objects")){
+			dust.dragShips = true;
+		}
+	}
 }
