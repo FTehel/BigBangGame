@@ -74,8 +74,17 @@ function updateFunction(){
 
 function cameraDirection(){
 	var cam : Transform = Camera.main.transform;
-	var cameraFront : Vector3 = cam.TransformDirection (Vector3.forward);
-	return cameraFront.normalized;
+	//var touchCentre : Vector2 = (Input.touches[0].position + Input.touches[1].position)/2;
+	var ray : Ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+	var planePosition = Vector3(0,gravityPlane,0);
+	var hPlane : Plane = new Plane(Vector3.up, planePosition);
+	var distance : float = 0;
+	var target : Vector3;
+	if(hPlane.Raycast(ray, distance)){
+	    target = ray.GetPoint(distance);
+	}
+	var direction = target - transform.position;
+	return direction.normalized;
 }
 
 function zoomInput(){

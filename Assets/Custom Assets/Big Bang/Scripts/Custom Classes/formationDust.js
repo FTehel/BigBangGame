@@ -34,8 +34,8 @@ var formationMassEffect : float = 1;
 var formationDrag : float = 100;
 var dragHeightEffect : float = 1;
 var maxFormationSpeed : float = 15;
-static var formationDraging : Transform;
-static var formationsDragging : Transform[] = new Transform[0];
+var formationDraging : Transform;
+var formationsDragging : Transform[] = new Transform[0];
 var maxGroupDragSize : float = 1;
 
 var mouseGravMass : float = 10;
@@ -644,11 +644,15 @@ function getMouseGravity(){
 	if(Input.GetMouseButton(0) && mouseGravExists){
 		createMouseGravWell();
 		setMouseDrag();
+		if(!dragEnabled && isTimer()){
+			dragEnabled = true;
+		}
 	}
 	if((!Input.GetMouseButton(0) || Time.timeScale == 0) && mouseGravExists){
 		mouseGravExists = false;
 		formationDraging = null;
 		clearFormationsDragging();
+		GetComponent(shipsHolder).clearShipsDragging();
 		dragEnabled = false;
 		//timer.disable();
 	}
@@ -676,6 +680,7 @@ function getTouchGravity(){
 		mouseGravExists = false;
 		formationDraging = null;
 		clearFormationsDragging();
+		GetComponent(shipsHolder).clearShipsDragging();
 		timer.disable();
 		timerClicked = false;
 		dragEnabled = false;
@@ -748,6 +753,7 @@ static var mouseDrag : Vector3;
 function getMouseDrag(percent : float){
 	//Debug.Log(7 + " " + mouseDrag);
 	return percent * mouseDrag;
+	//return Vector3.zero;
 }
 
 function setMouseDrag(){
@@ -1067,7 +1073,6 @@ function createFormation(mousePos : Vector2, formationX : formation){
 		}
 	}
 	else{
-		Debug.Log("asteroid");
 		createAsteroids(formationX.asteroid[0],position,formationX.startMass, formationX);
 		//createFormation(formationX,position);
 	}
@@ -1175,7 +1180,7 @@ function moveParticleToGravPlane(p : ParticleSystem.Particle){
 function cycleThroughFormations(){
 	for(var i = 0;i < formedObjects.length;i++){
 		//repairFormedObject(i);
-		clearFormationsDragging();
+		//clearFormationsDragging();
 		if(formedObjects[i] != null){
 			//var velocity = formedObjects[i].GetComponent(gravityWell).velocity;
 			formedObjects[i].GetComponent(gravityWell).velocity = pullFormationToWell(formedObjects[i],i);
@@ -1213,7 +1218,7 @@ function cycleThroughFormations(){
 
 function cycleThroughAsteroids(){
 	for(var i = 0;i < asteroids.length;i++){
-		clearFormationsDragging();
+		//clearFormationsDragging();
 		if(asteroids[i] != null){
 			//var velocity = formedObjects[i].GetComponent(gravityWell).velocity;
 			asteroids[i].GetComponent(gravityWell).velocity = pullAsteroidToWell(asteroids[i]);
@@ -1332,12 +1337,14 @@ function selectFormationToDrag(){
 }
 
 function addFormationToDrag(formation : Transform){
-	var temp = new Transform [formationsDragging.length + 1];
-	for(var i = 0;i < formationsDragging.length;i++){
-		temp[i] = formationsDragging[i];
+	if(inFormationsDragging(formation) == -1){
+		var temp = new Transform [formationsDragging.length + 1];
+		for(var i = 0;i < formationsDragging.length;i++){
+			temp[i] = formationsDragging[i];
+		}
+		temp[formationsDragging.length] = formation;
+		formationsDragging = temp;
 	}
-	temp[formationsDragging.length] = formation;
-	formationsDragging = temp;
 }
 
 function removeFormationFromDrag(index : int){
@@ -1533,12 +1540,12 @@ function dragFormation(f : Transform, extraDistance : float){
 			percent = 1;
 		}
 		if(Time.deltaTime != 0){
-			movement = Vector3.Lerp(movement,getMouseDrag(percent)/Time.deltaTime,getDragEffect(f.GetComponent(gravityWell).mass));
+			movement = Vector3.Lerp(movement,getMouseDrag(1)/Time.deltaTime,getDragEffect(f.GetComponent(gravityWell).mass));
 			if(formedObjects.length > 1){
 				movement = snapToPerfect(movement,f.GetComponent(gravityWell));
 			}
 		}
-	}	
+	}
 	return movement;
 }
 
@@ -1553,7 +1560,7 @@ function dragFormationGroup(f : Transform){
 			//var percent = 1;
 			if(Time.timeScale != 0 && Time.deltaTime != 0){
 				//Debug.Log(4.1 + " " + movement + " " + Time.deltaTime);
-				movement = Vector3.Lerp(movement,getMouseDrag(percent)/Time.deltaTime,(getDragEffect(f.GetComponent(gravityWell).mass)*percent)/Time.timeScale);
+				movement = Vector3.Lerp(movement,getMouseDrag(1)/Time.deltaTime,(getDragEffect(f.GetComponent(gravityWell).mass)*percent)/Time.timeScale);
 				//Debug.Log(4 + " " + movement + " " + Time.deltaTime);
 			}
 			var asteroid = f.GetComponent(asteroid);
@@ -1563,7 +1570,6 @@ function dragFormationGroup(f : Transform){
 			}
 		}
 	}
-	//Debug.Log(6 + " " + movement);
 	return movement;
 }
 
@@ -1584,11 +1590,11 @@ function dragFormationWithRay2(){
 }
 
 function dragFormationWithRay(){
-	if(formationDraging != null && Time.deltaTime != 0){
+	/*if(formationDraging != null && Time.deltaTime != 0){
 		var movement = formationDraging.GetComponent(gravityWell).velocity;
 		movement = Vector3.Lerp(movement,getMouseDrag(1)/Time.deltaTime,formationDrag/formationDraging.GetComponent(gravityWell).mass);
 		formationDraging.GetComponent(gravityWell).velocity = movement;
-	}
+	}*/
 }
 
 function dragFormationPosition(f : Transform, extraDistance : float){

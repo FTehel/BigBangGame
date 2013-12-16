@@ -1,19 +1,41 @@
 ﻿var ships : Transform[];
 var dust : formationDust;
-var shipTypes = new shipCreation[0];
+var shipTypesA = new Transform[0];
+var shipTypes : shipCreation[];
 var level = 1;
 var shipsDragging : Transform[];
 var shipDragEffect : float = 10;
 
+function addCreation(prefab : Transform){
+	var creation = prefab.GetComponent(shipCreation);
+	var temp = new shipCreation[shipTypes.length + 1];
+	for(var i = 0;i<shipTypes.length;i++){
+		temp[i] = shipTypes[i];
+	}
+	temp[shipTypes.length] = creation;
+	shipTypes = temp;
+}
+
+function addAllCreations(){
+	for(var i = 0;i<shipTypesA.length;i++){
+		addCreation(shipTypesA[i]);
+	}
+}
+
+function Awake(){
+	addAllCreations();
+}
+
 function transferStats(other : shipsHolder){
 	ships = other.ships;
-	shipTypes = other.shipTypes;
+	shipTypesA = other.shipTypesA;
 	level = other.level;
 	shipDragEffect = other.shipDragEffect;
+	addAllCreations();
 }
 
 function updateFunction(){
-	
+	cycleThroughShips();
 }
 
 function Start(){
@@ -45,16 +67,16 @@ function cycleThroughShips(){
 function dragShipGroup(f : Transform){
 	var movement = f.GetComponent(ship).getVelocity();
 	var distance = Vector3.Distance(f.position, dust.mouseGrav.position);
-	if(distance <= dust.getMouseGravDistance() * 2){
+	//if(distance <= dust.getMouseGravDistance() * 2){
 		var percent = 1-(distance/(dust.getMouseGravDistance()*2));
 		if(Time.timeScale != 0 && Time.deltaTime != 0){
-			movement = Vector3.Lerp(movement,dust.getMouseDrag(percent)/Time.deltaTime, shipDragEffect);
+			movement = Vector3.Lerp(movement,dust.getMouseDrag(1)/Time.deltaTime, shipDragEffect);
 		}
 		if(dust.formedObjects.length > 1){
 			//movement = dust.snapToPerfect(movement,f.GetComponent(gravityWell));
 			//Debug.Log(5 + " " + movement);
 		}
-	}
+	//}
 	//Debug.Log(6 + " " + movement);
 	return movement;
 }
@@ -75,12 +97,29 @@ function addShipToDrag(ship : Transform){
 	}
 }
 
-function addShipToDragging(ship : Transform){
-	var temp = new Transform [shipsDragging.length + 1];
-	for(var i = 0;i < shipsDragging.length;i++){
-		temp[i] = shipsDragging[i];
+function addShipToDragging(ship2 : Transform){
+	if(inShipsDragging(ship2) == -1){
+		var temp = new Transform [shipsDragging.length + 1];
+		for(var i = 0;i < shipsDragging.length;i++){
+			temp[i] = shipsDragging[i];
+		}
+		temp[shipsDragging.length] = ship2;
+		shipsDragging = temp;
+		ship2.GetComponent(ship).dragging = true;
 	}
-	temp[shipsDragging.length] = ship;
+}
+
+function removeShipFromDrag(index : int){
+	var temp = new Transform [shipsDragging.length - 1];
+	var i = 0;
+	var j = 0;
+	while(i < shipsDragging.Length){
+		if(i != index){
+			temp[j] = shipsDragging[i];
+			j++;
+		}
+		i++;
+	}
 	shipsDragging = temp;
 }
 
@@ -126,4 +165,11 @@ function getShipToCreate(){
 			return shipTypes[i].prefab;
 		}
 	}
+}
+
+function clearShipsDragging(){
+	for(var i = 0;i < shipsDragging.length;i++){
+		shipsDragging[i].GetComponent(ship).dragging = false;
+	}
+	shipsDragging = new Transform[0];
 }

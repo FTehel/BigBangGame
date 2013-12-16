@@ -51,4 +51,8 @@ function findStats(){
 		var other11 = main.GetComponent(createSolarSystem);
 		GetComponent(createSolarSystem).transferStats(other11);
 	}
+	if(main.GetComponent(shipsHolder) != null){
+		var other12 = main.GetComponent(shipsHolder);
+		GetComponent(shipsHolder).transferStats(other12);
+	}
 }
