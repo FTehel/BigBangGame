@@ -15,6 +15,7 @@ var supernovaLight : Transform;
 var newZoomLimits = Vector2(5,100);
 var android = false;
 var statsGot = false;
+var newSkybox : Material;
 
 static var orbitCount : float = 0;
 
@@ -42,11 +43,16 @@ function getStats(){
 		GetComponent(formationDust).mouseEnabled = true;
 		GetComponent(formationDust).limitGravity = false;
 		GetComponent(shipsHolder).transferStats(stats.GetComponent(shipsHolder));
+		GetComponent(generateStarfield).transferStats(stats.GetComponent(generateStarfield));
 	}
 	//setTutorial1();
 	if(playing){
 		GetComponent(zoomCamera).setLimits(newZoomLimits, true);
 		GetComponent(zoomCameraAndroid).setLimits(newZoomLimits, true);
+		var skybox = transform.GetComponent(Skybox);
+		skybox.material = newSkybox;
+		GetComponent(generateStarfield).playing = true;
+		GetComponent(generateStarfield).setMidUniverse();
 	}
 }
 
@@ -65,6 +71,7 @@ function transferStats(other : createSolarSystem){
 	supernovaSpeedToMass2 = other.supernovaSpeedToMass2;
 	maxOrbitCount = other.maxOrbitCount;
 	android = other.android;
+	newSkybox = other.newSkybox;
 }
 
 function reset(){
@@ -85,6 +92,9 @@ function setScene(stats : formationDust){
 	GetComponent(zoomCamera).setLimits(newZoomLimits, true);
 	GetComponent(zoomCameraAndroid).setLimits(newZoomLimits, true);
 	GetComponent(formationDust).transferStats(stats, false);
+	var skybox = transform.GetComponent(Skybox);
+	skybox.material = newSkybox;
+	Debug.Log("setting scene");
 	//setTutorial1();
 	//getStats();
 }

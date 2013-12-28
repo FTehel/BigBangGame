@@ -58,6 +58,7 @@ function updateFunction(){
 		}
 	}
 	else{
+		GetComponent(generateStarfield).playing = true;
 		destroyParticles();
 		//pullFormationsToCentre();
 		if(firstStarFormation.formedObjects.length > 0){

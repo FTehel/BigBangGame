@@ -15,6 +15,8 @@ var trail : float = 0.5;
 var lastSize : Vector2 = Vector2.zero;
 var lastSize2 : Vector2 = Vector2.zero;
 var minSize : float;
+var width : float;
+var fadeMod : float = 1.1;
 
 function OnGUI(){
 	getTexture(textureSize().y);
@@ -23,27 +25,27 @@ function OnGUI(){
 		var oldColour : Color = GUI.color;
 		GUI.color = Color( 1, 1, 1,1);
 		if(texture != null){
-			GUI.color = Color( 1, 1, 1,fade.x*trail);
-			GUI.DrawTexture( drawRectangleLastPos2(), texture, ScaleMode.StretchToFill, alphaBlend);
-			GUI.color = Color( 1, 1, 1,fade.x*trail);
-			GUI.DrawTexture( drawRectangleLastPos(), texture, ScaleMode.StretchToFill, alphaBlend);
+			//GUI.color = Color( 1, 1, 1,fade.x*trail);
+			//GUI.DrawTexture( drawRectangleLastPos2(), texture, ScaleMode.StretchToFill, alphaBlend);
+			GUI.color = Color( 1, 1, 1,fade.x*fadeMod);
+			//GUI.DrawTexture( drawRectangleLastPos(), texture, ScaleMode.StretchToFill, alphaBlend);
 			GUI.DrawTexture( drawRectangle(), texture, ScaleMode.StretchToFill, alphaBlend);
 		}
-		GUI.color = Color( 1, 1, 1,fade.y*trail);
+		GUI.color = Color( 1, 1, 1,fade.y);
 		if(oldTexture != null){
-			GUI.DrawTexture( drawRectangleLastPos2(), oldTexture, ScaleMode.StretchToFill, alphaBlend);
-			GUI.color = Color( 1, 1, 1,fade.y*trail);
-			GUI.DrawTexture( drawRectangleLastPos(), oldTexture, ScaleMode.StretchToFill, alphaBlend);
+			//GUI.DrawTexture( drawRectangleLastPos2(), oldTexture, ScaleMode.StretchToFill, alphaBlend);
+			GUI.color = Color( 1, 1, 1,fade.y*fadeMod);
+			//GUI.DrawTexture( drawRectangleLastPos(), oldTexture, ScaleMode.StretchToFill, alphaBlend);
 			GUI.DrawTexture( drawRectangle(), oldTexture, ScaleMode.StretchToFill, alphaBlend);
 		}
 		GUI.color = oldColour;
 	}
 	else if (texture != null){
 		var oldColour2 = GUI.color;
-		oldColour2 = GUI.color = Color( 1, 1, 1,trail);
-		GUI.DrawTexture( drawRectangleLastPos2(), texture, ScaleMode.StretchToFill, alphaBlend);
-		GUI.color = Color( 1, 1, 1,trail);
-		GUI.DrawTexture( drawRectangleLastPos(), texture, ScaleMode.StretchToFill, alphaBlend);
+		oldColour2 = GUI.color = Color( 1, 1, 1, 1);
+		//GUI.DrawTexture( drawRectangleLastPos2(), texture, ScaleMode.StretchToFill, alphaBlend);
+		//GUI.color = Color( 1, 1, 1,trail);
+		//GUI.DrawTexture( drawRectangleLastPos(), texture, ScaleMode.StretchToFill, alphaBlend);
 		GUI.DrawTexture( drawRectangle(), texture, ScaleMode.StretchToFill, alphaBlend);
 		
 		GUI.color = oldColour2;
@@ -73,7 +75,10 @@ function textureSize(){
 	var y = x/xPercentOfY;
 	var returnVector = Vector2(x,y)*size;
 	if(rScreen.z > 0 && lScreen.z > 0){
-		return returnVector;
+		if(x <= Screen.width){
+			return returnVector;
+		}
+		return Vector2.zero;
 	}
 	else{
 		return Vector2.zero;
@@ -154,17 +159,76 @@ function orderLayers(){
 	}
 }
 
-function getFade(size : float){
+/*function getFade(size : float){
 	var startSize = layers[currentLayer].size;
-	if(size >= startSize * crossFadeSize){
+	if(size <= startSize * crossFadeSize){
 		fade = Vector2(1,0);
 		textureFading = false;
 	}
 	else{
-		var sizePercent = (size - startSize)/((startSize * crossFadeSize) - startSize);
-		fade = Vector2(sizePercent,1-sizePercent);
+		var sizePercent = (startSize - size)/(startSize - (startSize * crossFadeSize));
+		fade = Vector2(1 - sizePercent,sizePercent);
+		Debug.Log(sizePercent + " " + startSize + " " + size + " ");
 		textureFading = true;
 	}
+}*/
+
+function getFade(size : float){
+	var startSize = layers[currentLayer].size;
+	var max = sizeUp() - (sizeUp() * crossFadeSize);
+	var min = startSize + (startSize * crossFadeSize);
+	var sizePercent : float = -1;
+	var range : float = -1;
+	width = size;
+	if(size >= max){
+		textureFading = true;
+		range = (sizeUp() * crossFadeSize) + (sizeUp() * crossFadeSize);
+		sizePercent = (size - max)/range;
+		fade = Vector2(1 - sizePercent, sizePercent);
+		oldTexture = upTexture();
+	}
+	else if(size <= min){
+		textureFading = true;
+		range = (startSize * crossFadeSize) + (startSize * crossFadeSize);
+		sizePercent = (min-size)/range;
+		fade = Vector2(1 - sizePercent, sizePercent);
+		oldTexture = downTexture();
+	}
+	else{
+		textureFading = false;
+	}
+}
+
+function sizeDown(){
+	var i = currentLayer - 1 ;
+	if(i >= 0){
+		return layers[i].size;
+	}
+	else return -1;
+}
+
+function upTexture(){
+	var i = currentLayer + 1;
+	if(i < layers.length){
+		return layers[i].texture;
+	}
+	return oldTexture;
+}
+
+function downTexture(){
+	var i = currentLayer - 1 ;
+	if(i >= 0){
+		return layers[i].texture;
+	}
+	return null;
+}
+
+function sizeUp(){
+	var i = currentLayer + 1;
+	if(i < layers.length){
+		return layers[i].size;
+	}
+	return 100000;
 }
 
 function pointsOnScreen(point1 : Vector2, point2 : Vector2){
@@ -211,7 +275,7 @@ function rectangleOnScreen(rectangle : Rect){
 	return true;
 }
 
-function pointOnScreen(point : Vector3){
+/*function pointOnScreen(point : Vector3){
 	var cameraPos = Camera.main.transform.position;
 	var cameraDirection = Camera.main.transform.TransformDirection(Vector3.forward);
 	var vectorToPoint = point - cameraPos;
@@ -223,10 +287,18 @@ function pointOnScreen(point : Vector3){
 	}
 	Debug.Log("True " + Vector3.Dot(cameraDirection,vectorToPoint));
 	return true;
-}
+}*/
 
 function pointsOnScreen(point1 : Vector3, point2 : Vector3){
 	if(pointOnScreen(point1) && pointOnScreen(point2)){
+		return true;
+	}
+	return false;
+}
+
+function pointOnScreen(point : Vector3){
+	var cameraPos = Camera.main.transform.position;
+	if(point.y < cameraPos.y){
 		return true;
 	}
 	return false;

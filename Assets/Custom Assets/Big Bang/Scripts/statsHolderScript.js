@@ -55,4 +55,12 @@ function findStats(){
 		var other12 = main.GetComponent(shipsHolder);
 		GetComponent(shipsHolder).transferStats(other12);
 	}
+	if(main.GetComponent(generateStarfield) != null){
+		var other13 = main.GetComponent(generateStarfield);
+		GetComponent(generateStarfield).transferStats(other13);
+	}
+	if(main.GetComponent(generateGalaxy) != null){
+		var other14 = main.GetComponent(generateGalaxy);
+		GetComponent(generateGalaxy).transferStats(other14);
+	}
 }

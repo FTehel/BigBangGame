@@ -95,6 +95,11 @@ function addDust(index : int, amount : int){
 	growAmount += newGrowAmount;
 }
 
+function setScale(){
+	var newSize = Mathf.Pow((transform.GetComponent(gravityWell).mass*massRadiusRatio)/(1.33*3.14),0.33)*2;
+	scale = newSize;
+}
+
 function getGrowthAmount(dustType : String){
 	for(var i = 0;i < dustTypes.length;i++){
 		if(dustTypes[i].dustType == dustType){

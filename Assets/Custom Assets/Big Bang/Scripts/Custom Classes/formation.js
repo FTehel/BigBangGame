@@ -11,6 +11,7 @@
 	static var startRadius : float;
 	var asteroid : asteroidFormation[];
 	var trailToSize : float = 10;
+	var explosionSpeed : float = 100;
 	
 /*	function formation(name : String, minDust : int, prefab : Transform, maxGrav : float, dustTypes : dustProportion[]){
 		this.name = name;

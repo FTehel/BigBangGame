@@ -45,6 +45,7 @@ function startFunction () {
 		Random.Range(startPos.z-positionRange,startPos.z + positionRange));
 		if(i == 0){
 			centralMass = position;
+			GetComponent(generateGalaxy).setScene(position);
 		}
 		else{
 			position = centralMass + newVector;

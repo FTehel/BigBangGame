@@ -559,16 +559,16 @@ function cycleThroughParticles(){
 		    		//pVelocity = limitVector(pVelocity);
 		    	}
 				newVelocity += pVelocity;
-				if(newVelocity.magnitude > dustVelocityMax){
+				/*if(newVelocity.magnitude > dustVelocityMax){
 					newVelocity = newVelocity.normalized * initialSpeed;
-				}
+				}*/
 				
-					newVelocity = slowParticle(newVelocity);
+				newVelocity = slowParticle(newVelocity);
 				
 				p[i].velocity = newVelocity;
 				if(mouseGravExists && p[i].lifetime > dustDeathTime){
 					newVelocity = dragParticle(p[i]);
-					p[i].position = dragParticlePosition(p[i]);
+					//p[i].position = dragParticlePosition(p[i]);
 				}
 				p[i].velocity = newVelocity;
 				p[i].velocity = moveParticleToGravPlane(p[i]);
@@ -675,6 +675,9 @@ function getTouchGravity(){
 	if(Input.touches.Length == 1 && mouseGravExists && !Camera.main.GetComponent(menu).imageDraging){
 		createTouchGravWell();
 		setMouseDrag();
+		if(!dragEnabled && isTimer()){
+			dragEnabled = true;
+		}
 	}
 	if((Input.touches.Length != 1 || Time.timeScale == 0)&& mouseGravExists){
 		mouseGravExists = false;
@@ -766,8 +769,8 @@ function setMouseDrag(){
 function dragParticle(p : ParticleSystem.Particle){
 	var movement = p.velocity;
 	var distance = Vector3.Distance(p.position + getMouseDrag(1)*2, mouseGrav.position);
-	if(distance <= mouseGravParticleDistance){
-		var percent = 1-(distance/mouseGravParticleDistance);
+	if(distance <= getMouseGravDistance()*2){
+		var percent = 1-(distance/(getMouseGravDistance()*2));
 		percent *= mouseDragDropOff;
 		if(percent > 1){
 			percent = 1;
@@ -841,8 +844,8 @@ function mergeParticle(p : ParticleSystem.Particle, tag : String){
 	if(lifetime > dustDeathTime){
 		for(var i = 0;i < formedObjects.length;i++){
 			if(formedObjects[i]!= null){
-				if(formedObjects[i].GetComponent(formationObject).inDustTypes(tag) && Vector3.Distance(p.position,formedObjects[i].position) < (formedObjects[i].localScale.y/2) + 0.1 + 
-				(formedObjects[i].GetComponent(formationObject).dustDistance/2)){
+				if(formedObjects[i].GetComponent(formationObject).inDustTypes(tag) && Vector3.Distance(p.position,formedObjects[i].position) < (formedObjects[i].localScale.y/2) + 0.1 /*+ 
+				(formedObjects[i].GetComponent(formationObject).dustDistance/2)*/){
 					formedObjects[i].GetComponent(formationObject).mergeWithDust(p, tag);
 					lifetime = dustDeathTime;
 				}
@@ -1039,9 +1042,9 @@ function createFormation(position : Vector3, formation : Transform, mass : float
 	formedObjects[length-1].GetComponent(formationObject).transferStats(other);
 	//solarSystemDust.formedObjects[length-1].GetComponent(formationObject).growAmount = Mathf.Pow(mass/(1.33*3.14),0.33)*other.massRadiusstarRatio*2;
 	//solarSystemDust.formedObjects[length-1].GetComponent(formationObject).growAmount = 1;
-	formedObjects[length-1].GetComponent(formationObject).newGrowRate = speed;
 	formedObjects[length-1].GetComponent(formationObject).setDustAmount(mass);
 	formedObjects[length-1].GetComponent(gravityWell).position = thisPos;
+	formedObjects[length-1].GetComponent(formationObject).setScale();
 	if(formedObjects.Length > 1){
 		velocity = getStartPerfectVelocity(formedObjects[length-1].GetComponent(gravityWell));
 	}
@@ -1066,6 +1069,7 @@ function createFormation(mousePos : Vector2, formationX : formation){
 		formedObjects[formedObjects.length-1].GetComponent(gravityWell).position = position;
 		formedObjects[formedObjects.length-1].GetComponent(formationObject).transferStats(formationX);
 		formedObjects[formedObjects.length-1].localScale = Vector3.zero;
+		formedObjects[formedObjects.length-1].GetComponent(formationObject).setScale();
 		//createFormation(formationX,position);
 		var grav = formedObjects[formedObjects.length-1].GetComponent(gravityWell);
 		if(formedObjects.Length > 1){
@@ -1241,7 +1245,7 @@ function cycleThroughAsteroids(){
 				/*if(formationDraging == asteroids[i]){
 					asteroids[i].GetComponent(gravityWell).velocity = dragFormationGroup(asteroids[i]);
 				}*/
-				if(!dragShips && inFormationsDragging(asteroids[i])/* && 
+				if(!dragShips && dragEnabled && inFormationsDragging(asteroids[i])/* && 
 				asteroids[i].localScale.x <= maxGroupDragSize*/){
 					asteroids[i].GetComponent(gravityWell).velocity = dragFormationGroup(asteroids[i]);
 				}
@@ -1558,16 +1562,15 @@ function dragFormationGroup(f : Transform){
 		if(distance <= getMouseGravDistance() * 2){
 			var percent = 1-(distance/(getMouseGravDistance()*2));
 			//var percent = 1;
-			if(Time.timeScale != 0 && Time.deltaTime != 0){
-				//Debug.Log(4.1 + " " + movement + " " + Time.deltaTime);
-				movement = Vector3.Lerp(movement,getMouseDrag(1)/Time.deltaTime,(getDragEffect(f.GetComponent(gravityWell).mass)*percent)/Time.timeScale);
-				//Debug.Log(4 + " " + movement + " " + Time.deltaTime);
-			}
-			var asteroid = f.GetComponent(asteroid);
-			if(formedObjects.length > 1 || (asteroid != null && !asteroid.isPlanet && formedObjects.length > 0)){
-				movement = snapToPerfect(movement,f.GetComponent(gravityWell));
-				//Debug.Log(5 + " " + movement);
-			}
+		}
+		if(Time.timeScale != 0 && Time.deltaTime != 0){
+			//Debug.Log(4.1 + " " + movement + " " + Time.deltaTime);
+			movement = Vector3.Lerp(movement,getMouseDrag(1)/Time.deltaTime,(getDragEffect(f.GetComponent(gravityWell).mass)));
+		}
+		var asteroid = f.GetComponent(asteroid);
+		if(formedObjects.length > 1 || (asteroid != null && !asteroid.isPlanet && formedObjects.length > 0)){
+			movement = snapToPerfect(movement,f.GetComponent(gravityWell));
+			//Debug.Log(5 + " " + movement);
 		}
 	}
 	return movement;
@@ -1763,6 +1766,16 @@ function supernovaStar(star2 : Transform){
 	if(star!= null){
 		var gravWell = star2.GetComponent(gravityWell);
 		var speed : float;
+		var dustNumber : int = 0;
+		var gasNumber : int = 0;
+		for(var l = 0;l < star.supernovaParticles.length;l++){
+			if(star.supernovaParticles[l].tag == "dust"){
+				dustNumber++;
+			}
+			else if(star.supernovaParticles[l].tag == "gas"){
+				gasNumber++;
+			}
+		}
 		for(var j = 0;j < star.supernovaParticles.length;j++){
 			var fObject = star2.GetComponent(formationObject);
 			var pNumber = 0;
@@ -1774,10 +1787,12 @@ function supernovaStar(star2 : Transform){
 			if(SNDust.tag == "dust"){
 				pNumber = Mathf.RoundToInt(pNumber * star.supernovaDustPercent);
 				speed = Mathf.Pow(pNumber,0.3) * supernovaSpeedToMass2;
+				pNumber /= dustNumber;
 			}
 			else{
 				pNumber = Mathf.RoundToInt(pNumber * (1-star.supernovaDustPercent));
 				speed = Mathf.Pow(pNumber,0.3) * supernovaSpeedToMass1;
+				pNumber /= gasNumber;
 			}
 			particleObject.startSpeed = (speed);
 			particleObject.Emit(pNumber);

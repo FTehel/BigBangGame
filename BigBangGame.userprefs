@@ -1,14 +1,18 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Custom Assets\Big Bang\Scripts\Custom Classes\formationDust.js">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Custom Assets/Big Bang/Scripts/Rendering/generateStarfield.js">
     <Files>
-      <File FileName="Assets\Custom Assets\Big Bang\Scripts\Custom Classes\ships\ship.js" Line="129" Column="40" />
-      <File FileName="Assets\Custom Assets\Big Bang\Scripts\Custom Classes\formationDust.js" Line="1239" Column="18" />
-      <File FileName="Assets\Custom Assets\Big Bang\Scripts\Custom Classes\ships\shipsHolder.js" Line="38" Column="25" />
-      <File FileName="Assets\Custom Assets\Big Bang\Scripts\Custom Classes\ships\shipCreation.js" Line="2" Column="21" />
-      <File FileName="Assets\Custom Assets\Interface\Scripts\planetInterface.js" Line="55" Column="54" />
-      <File FileName="Assets\Custom Assets\Big Bang\Scripts\createSolarSystem.js" Line="43" Column="52" />
-      <File FileName="Assets\Custom Assets\Interface\Scripts\menu.js" Line="317" Column="26" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/formationDust.js" Line="607" Column="66" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/zoomCameraAndroid.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Camera/zoomCamera.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/ships/shipsHolder.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/ships/ship.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Custom Classes/gravityWell.js" Line="1" Column="1" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/createFirstStars.js" Line="61" Column="50" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/createSolarSystem.js" Line="48" Column="19" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Rendering/backGroundGenerator.js" Line="188" Column="9" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Rendering/generateStarfield.js" Line="13" Column="3" />
+      <File FileName="Assets/Custom Assets/Big Bang/Scripts/Rendering/resizingFlare.js" Line="80" Column="4" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

@@ -69,7 +69,10 @@
      <Compile Include="Assets\Custom Assets\Big Bang\Scripts\Custom Classes\ships\shipsHolder.js" />
      <Compile Include="Assets\Custom Assets\Big Bang\Scripts\Custom Classes\star.js" />
      <Compile Include="Assets\Custom Assets\Big Bang\Scripts\GenerateSolarSystem.js" />
+     <Compile Include="Assets\Custom Assets\Big Bang\Scripts\Generators\generateGalaxy.js" />
+     <Compile Include="Assets\Custom Assets\Big Bang\Scripts\Rendering\backGroundGenerator.js" />
      <Compile Include="Assets\Custom Assets\Big Bang\Scripts\Rendering\flareLayer.js" />
+     <Compile Include="Assets\Custom Assets\Big Bang\Scripts\Rendering\generateStarfield.js" />
      <Compile Include="Assets\Custom Assets\Big Bang\Scripts\Rendering\resizingFlare.js" />
      <Compile Include="Assets\Custom Assets\Big Bang\Scripts\alterTime.js" />
      <Compile Include="Assets\Custom Assets\Big Bang\Scripts\billboard.js" />

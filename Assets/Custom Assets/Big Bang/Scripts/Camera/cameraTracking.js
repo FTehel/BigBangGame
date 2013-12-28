@@ -44,6 +44,7 @@ function LateUpdate () {
 	else{
 		updateFunctionAndroid();
 	}
+	getCollisions();
 }
 
 function updateFunctionPC(){
@@ -281,5 +282,8 @@ function collideCamera(object : Transform){
 }
 
 function getCollisions(){
-	
+	var objects = GetComponent(formationDust).formedObjects;
+	for(var i = 0;i < objects.length;i++){
+		collideCamera(objects[i]);
+	}
 }
